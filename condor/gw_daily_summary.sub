@@ -7,7 +7,7 @@
 # Note: adapted for the 40m by Max Isi (July 2015)
 
 universe = local
-executable = /home/40m/summary/bin/gw_daily_summary_40m
+executable = /home/40m/DetectorChar/bin/gw_daily_summary_40m
 accounting_group = ligo.dev.o1.detchar.daily.summary
 accounting_group_user = max.isi
 

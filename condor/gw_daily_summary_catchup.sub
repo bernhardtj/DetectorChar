@@ -1,0 +1,29 @@
+#!/usr/bin/env condor_submit
+#
+# Copyright (C): Duncan Macleod (2014)
+#
+# Condor submit file for core daily summary processing
+#
+# Note: adapted for the 40m by Max Isi (July 2015)
+
+universe = local
+executable = /home/40m/summary/bin/gw_daily_summary_catchup
+accounting_group = ligo.dev.o1.detchar.daily.summary
+accounting_group_user = max.isi 
+
+output = /usr1/40m/summary/gw_daily_summary_catchup.out
+error = /usr1/40m/summary/gw_daily_summary_catchup.err
+log = /usr1/40m/summary/gw_daily_summary_catchup.log
+
+on_exit_remove = false
+periodic_hold = false
+cron_minute = 00
+cron_hour = 17
+cron_day_of_month = *
+cron_month = *
+cron_day_of_week = *
+cron_window = 120
+
+getenv = True
+
+queue

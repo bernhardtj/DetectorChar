@@ -1,0 +1,40 @@
+#!/bin/bash -le
+
+#
+# LLO L1 daily summary page script
+# designed for ER5 using the gw_summ package
+#
+# Author: Duncan Macleod
+#
+# A pipeline is generated using the gw_summary_pipe DAG generator
+# before this DAG is submitted to the condor job scheduler
+#
+
+# catch command line options
+DAY=$@
+BACKFILL=`python -c "print(86400 * 40)"`
+
+# set day
+if [ -z "${DAY}" ]; then
+   let LASTWEEK=$(lalapps_tconvert 2>/dev/null)-$BACKFILL
+   DAY=`lalapps_tconvert -f %Y%m%d ${LASTWEEK} 2>/dev/null`
+fi
+
+# find directory
+ARCHIVEDIR=${HOME}/public_html/summary/day/${DAY}/archive
+
+# check directory
+if [ ! -d "${ARCHIVEDIR}" ]; then
+    echo "No archive directory found for ${DAY}"
+    exit 1
+fi
+
+# allow manual preservation of archives
+if [ -f "${ARCHIVEDIR}/KEEP" ]; then
+    echo "Found KEEP, not deleting archives"
+    exit 0
+fi
+
+# otherwise, delete them. Delete them all!
+rm -f ${ARCHIVEDIR}/*.hdf
+echo "Cleaned archive for ${DAY}"

@@ -1,0 +1,22 @@
+#!/bin/bash -le
+
+#
+# LIGO daily summary page script to rerun yesterday's data
+#
+# Author: Duncan Macleod, Max Isi
+#
+
+# get common functions
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. ${DIR}/functions
+
+# set 40m variables
+export SUMMARY_OUT=${HOME}/public_html/summary
+export IFO=C1
+set_site_environment
+
+# sync 40m configurations to ~/etc/summary/configurations/c1/
+update_40m_config
+
+# execute gw_daily_summary as normal
+gw_daily_summary $@

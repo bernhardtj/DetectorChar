@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. ${DIR}/functions
+
+# -----------------------------------------------------------------------------
+# EXECUTE
+
+TODAY=${SUMMARY_BASE}/today
+DAYPATH=${SUMMARY_BASE}/day/$(date_today_local)
+
+# remove old today link
+if [[ -L "${TODAY}" && -d "${TODAY}" ]]; then
+    OLD=`readlink -f ${TODAY}`
+    unlink ${TODAY}
+    echo "Unlinked old today from $OLD"
+    unset OLD
+fi
+
+# link today
+if [ -d ${TODAY} ]; then
+    echoerr "Somehow there's still a directory here, must be a real directory"
+    exit 1
+else
+    ln -s ${DAYPATH} ${TODAY}
+    echo "Linked ${DAYPATH} to ${TODAY}"
+    exit 0
+fi

@@ -1,0 +1,14 @@
+#!/bin/bash -l
+
+#
+# LIGO daily summary page script for SLOW-access data
+#
+# Author: Duncan Macleod <duncan.macleod@ligo.org>
+
+# find common functions
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. ${DIR}/functions
+
+# execute gw_daily_summary with custom list of systems
+SUMMARY_SYSTEMS=`get_slow_systems` \
+gw_daily_summary --file-tag gw_daily_summary_slow --skip-html-wrapper

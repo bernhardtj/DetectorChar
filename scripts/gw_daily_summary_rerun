@@ -1,0 +1,20 @@
+#!/bin/bash -le
+
+#
+# LIGO daily summary page script to rerun yesterday's data
+#
+# Author: Duncan Macleod
+#
+
+# get common functions
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. ${DIR}/functions
+
+# parse default arguments
+SUMMARY_ARGUMENTS="$@"
+DAY=$(parse_argument_default day `date_yesterday`)
+FILETAG=$(parse_argument_default file-tag gw_daily_summary_rerun)
+MAXJOBS=$(parse_argument_default maxjobs 1)
+
+# execute gw_daily_summary with custom list of systems
+gw_daily_summary ${DAY} ${FILETAG} ${MAXJOBS} $@

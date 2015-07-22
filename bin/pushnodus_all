@@ -1,0 +1,53 @@
+#! /bin/bash
+
+NODUSWEB=/users/public_html/detcharsummary
+RUN_DIRECTORY=$HOME/public_html/summary/
+
+######################################################################################
+# Make absoulute references relative
+
+cd ${RUN_DIRECTORY}/day
+
+# Loop over ALL days
+for d0 in */ ; do
+  cd $d0
+  count=`ls -1 *.html 2>/dev/null | wc -l`
+  if [ $count != 0 ]; then
+    sed -i -- 's*<base href="/~40m/summary/" />*<base href="../.." />*g' *.html
+  fi
+  # Loop over tabs
+  for d1 in */ ; do
+    if [ -d "$d1" ]; then
+      cd $d1
+      count=`ls -1 *.html 2>/dev/null | wc -l`
+      if [ $count != 0 ]; then
+        sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../.." />*g' *.html
+      fi
+      # Loop over sub-tabs
+      for d2 in */ ; do
+        if [ -d "$d2" ]; then
+          cd $d2
+          count=`ls -1 *.html 2>/dev/null | wc -l`
+          if [ $count != 0 ]; then
+            sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../../.." />*g' *.html
+          fi
+          cd ${RUN_DIRECTORY}/day/$d0/$d1
+        fi
+      done
+      cd ${RUN_DIRECTORY}/day/$d0
+    fi
+  done
+  cd ${RUN_DIRECTORY}/day/
+done
+ 
+######################################################################################
+# Perform sync
+
+rsync --exclude archive/ -r ${RUN_DIRECTORY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}
+
+{
+  LOGDIR=/usr1/40m/summary/pushnodus-log
+  NOW=$(lalapps_tconvert now)
+  echo "Last push to nodus (ALL): $NOW" > $LOGDIR
+}
+

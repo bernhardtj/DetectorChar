@@ -1,0 +1,68 @@
+#! /bin/bash
+
+NODUSWEB=/users/public_html/detcharsummary
+RUN_DIRECTORY=$HOME/public_html/summary/
+
+TODAY=`date +%Y%m%d`
+YESTERDAY=`date --date='yesterday' +%Y%m%d`
+TOMORROW=`date --date='tomorrow' +%Y%m%d`
+
+################################################################################
+# Make absoulute references relative
+
+cd ${RUN_DIRECTORY}/day
+
+# Loop over days
+for d0 in */ ; do
+  if [[ "$d0" == ${TODAY}"/" || $d0 == ${YESTERDAY}"/" || "$d0" == ${TOMORROW}"/" ]]; then 
+    cd $d0
+    count=`ls -1 *.html 2>/dev/null | wc -l`
+    if [ $count != 0 ]; then
+      sed -i -- 's*<base href="/~40m/summary/" />*<base href="../.." />*g' *.html
+    fi
+    # Loop over tabs
+    for d1 in */ ; do
+      if [ -d "$d1" ]; then
+        cd $d1
+        count=`ls -1 *.html 2>/dev/null | wc -l`
+        if [ $count != 0 ]; then
+          sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../.." />*g' *.html
+        fi
+        # Loop over sub-tabs
+        for d2 in */ ; do
+          if [ -d "$d2" ]; then
+            cd $d2
+            count=`ls -1 *.html 2>/dev/null | wc -l`
+            if [ $count != 0 ]; then
+              sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../../.." />*g' *.html
+            fi
+            cd ${RUN_DIRECTORY}/day/$d0/$d1
+          fi
+        done
+        cd ${RUN_DIRECTORY}/day/$d0
+      fi
+    done
+    cd ${RUN_DIRECTORY}/day/
+  fi
+done
+ 
+################################################################################
+# Perform sync
+
+scp ${RUN_DIRECTORY}/status.html controls@nodus.ligo.caltech.edu:${NODUSWEB}/status.html > /dev/null 2>&1
+
+rsync --exclude archive/ -rz ${RUN_DIRECTORY}/logs/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/logs
+
+rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TODAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TODAY}
+
+rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${YESTERDAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${YESTERDAY} 
+
+if [ -d "${RUN_DIRECTORY}/day/${TOMORROW}" ]; then
+  rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TOMORROW}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TOMORROW} 
+fi
+{
+  LOGDIR=/usr1/40m/summary/pushnodus-log
+  NOW=$(lalapps_tconvert now)
+  echo "Last push to nodus: $NOW" > $LOGDIR
+}
+

@@ -1,0 +1,10 @@
+#!/bin/bash -l
+
+#
+# LIGO daily summary page script
+#
+# Author: Duncan Macleod <duncan.macleod@ligo.org>
+#
+
+# execute gw_daily_summary to generate only HTML
+gw_daily_summary --file-tag gw_daily_summary_html --html-wrapper-only

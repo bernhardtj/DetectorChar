@@ -1,0 +1,102 @@
+#!/bin/bash -l
+#
+# LIGO daily summary page script
+#
+# Author: Duncan Macleod <duncan.macleod@ligo.org>
+#
+# A pipeline is generated using the gw_summary_pipe DAG generator
+# before this DAG is submitted to the condor job scheduler
+#
+# Note: customized for the 40m by Max Isi (Jul 16, 2015)
+
+echo "-- Welcome to the gw_summary DAG generator -----------------------------------"
+
+# get basic environment
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. ~/.bash_profile
+. $DIR/functions
+
+# catch command line options
+SUMMARY_ARGUMENTS="$@"
+
+# move to output directory
+mkdir -p ${SUMMARY_OUT}
+cd ${SUMMARY_OUT}
+echo "Moved to output directory ${SUMMARY_OUT}"
+
+# -- set environment ----------------------------
+IFO="C1"
+set_site_environment
+. /home/detchar/opt/gwpysoft/etc/gwpy-user-env.sh
+cleanpath PYTHONPATH
+cleanpath PATH
+echo "Environment set"
+
+# -- update config files -------------------
+update_40m_config
+echo "Pulled from 40m"
+
+# -- set kerberos environment -------------------
+get_robot_kerberos_ticket
+check_kerberos_ticket || exit $?
+echo "Kerberos ticket verified"
+
+# -- parse arguments ----------------------------
+# parse arguments with defaults
+if [[ "${SUMMARY_ARGUMENTS}" == *"config-file"* ]]; then
+    CONFIGURATIONS=""
+else
+    CONFIGURATIONS=`get_config-file_and_priority_args`
+fi
+NPROC=`parse_argument_default multi-process 16`
+MAXJOBS=`parse_argument_default maxjobs 2`
+CONDORCMD=`get_condor_arguments`
+FILETAG=`parse_argument_default file-tag gw_daily_summary`
+
+# set arguments
+OPTIONS="
+--verbose ${FILETAG} --archive --ifo ${ifo} --log-dir ${LOGDIR}
+${CONFIGURATIONS} ${CONDORCMD} ${MAXJOBS} ${NPROC} --on-segdb-error warn"
+ARGUMENTS=$(eval echo ${SUMMARY_ARGUMENTS})
+
+# clean up
+if [ ! -f *.lock ]; then
+    # clean previous DAGs
+    {
+    rm ${FILETAG}*
+    echo "Removed old DAGs."
+    } || {
+    echo "No previous DAGs."
+    }
+    # clean previous logs
+    {
+    rm ${LOGDIR}/${FILETAG}*
+    echo "Removed old logs."
+    } || {
+    echo "No previous logs."
+    }
+fi
+
+# run job and capture DAGMan process ID
+_SUMMARY_CMD="gw_summary_pipe $OPTIONS $ARGUMENTS"
+echo "Executing:"
+echo "-------------------------------------------------------------------------------"
+echo $_SUMMARY_CMD
+echo "-------------------------------------------------------------------------------"
+DAGFILE=$(basename `${_SUMMARY_CMD} | tail -n1`)
+echo
+echo "Dag generated as:"
+echo
+echo $DAGFILE
+echo
+
+# submit DAG
+if [ -f ${DAGFILE}.lock ]; then
+    echo "DAG lock file already exists, cannot submit now!" 1>&2
+    exit 1
+fi
+sleep 5
+condor_submit_dag -force ${DAGFILE}
+
+# watch lock file and exit when the DAG is done
+wait_for_dag_and_exit $DAGFILE || exit 1

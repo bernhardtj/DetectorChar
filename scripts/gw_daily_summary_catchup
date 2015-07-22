@@ -1,0 +1,14 @@
+#!/bin/bash -l
+
+#
+# LIGO daily summary page script for daily catchup jobs
+#
+# Author: Duncan Macleod <duncan.macleod@ligo.org>
+
+# get absolute directory of file
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+. $DIR/functions
+
+# execute gw_daily_summary with custom list of systems
+SUMMARY_SYSTEMS="hveto daily_ihope stamp" \
+gw_daily_summary --day `date_yesterday` --file-tag gw_daily_summary_catchup --skip-html-wrapper

@@ -1,0 +1,22 @@
+#!/usr/bin/env condor_submit
+# Condor submit file for summary page prototyping.
+
+universe = local
+executable = /home/max.isi/summary/bin/gw_test_summary
+
+output = /usr1/max.isi/summary/gw_test_summary.out
+error = /usr1/max.isi/summary/gw_test_summary.err
+log = /usr1/max.isi/summary/gw_test_summary.log
+
+periodic_hold = false
+on_exit_remove = false
+cron_minute = */15
+cron_hour = *
+cron_day_of_month = *
+cron_month = *
+cron_day_of_week = *
+cron_window = 120
+
+getenv = True
+
+queue

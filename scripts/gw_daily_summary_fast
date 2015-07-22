@@ -1,0 +1,10 @@
+#!/bin/bash -l
+
+#
+# LIGO daily summary page script for FAST-access data
+#
+# Author: Duncan Macleod <duncan.macleod@ligo.org>
+
+# execute gw_daily_summary with custom list of systems
+SUMMARY_SYSTEMS="hoft calibration guardian" \
+gw_daily_summary --file-tag gw_daily_summary_fast --skip-html-wrapper

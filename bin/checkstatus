@@ -1,4 +1,8 @@
 #! /usr/bin/python
+#
+# Checks status of 40m summary page condor jobs and produces status HTML page.
+#
+# Author: Max Isi <max.isi@ligo.org>
 
 import os
 import sys

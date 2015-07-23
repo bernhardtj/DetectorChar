@@ -1,4 +1,8 @@
 #! /bin/bash
+#
+# Pushes 40m summary pages to nodus.
+#
+# Author: Max Isi <max.isi@ligo.org>
 
 NODUSWEB=/users/public_html/detcharsummary
 RUN_DIRECTORY=$HOME/public_html/summary/
@@ -8,7 +12,7 @@ YESTERDAY=`date --date='yesterday' +%Y%m%d`
 TOMORROW=`date --date='tomorrow' +%Y%m%d`
 
 ################################################################################
-# Make absoulute references relative
+# Edit HTML (make absoulute references relative)
 
 cd ${RUN_DIRECTORY}/day
 
@@ -49,17 +53,26 @@ done
 ################################################################################
 # Perform sync
 
+# push status page
 scp ${RUN_DIRECTORY}/status.html controls@nodus.ligo.caltech.edu:${NODUSWEB}/status.html > /dev/null 2>&1
 
+# rsync logs
 rsync --exclude archive/ -rz ${RUN_DIRECTORY}/logs/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/logs
 
+# rsync today's data
 rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TODAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TODAY}
 
+# rsync yesterday's data
 rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${YESTERDAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${YESTERDAY} 
 
+# rsync tomorrow's data (if it exists)
 if [ -d "${RUN_DIRECTORY}/day/${TOMORROW}" ]; then
   rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TOMORROW}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TOMORROW} 
 fi
+
+################################################################################
+# Write log
+
 {
   LOGDIR=/usr1/40m/summary/pushnodus-log
   NOW=$(lalapps_tconvert now)

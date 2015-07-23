@@ -11,6 +11,10 @@ TODAY=`date +%Y%m%d`
 YESTERDAY=`date --date='yesterday' +%Y%m%d`
 TOMORROW=`date --date='tomorrow' +%Y%m%d`
 
+# check code status
+DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
+python ${DIR}/checkstatus
+
 ################################################################################
 # Edit HTML (make absoulute references relative)
 

@@ -60,18 +60,19 @@ ${CONFIGURATIONS} ${CONDORCMD} ${MAXJOBS} ${NPROC} --on-segdb-error warn"
 ARGUMENTS=$(eval echo ${SUMMARY_ARGUMENTS})
 
 # clean up
+TAG=${FILETAG#* } # removes "--file-tag" from FILETAG
 if [ ! -f *.lock ]; then
     # clean previous DAGs
     {
-    rm ${FILETAG}*
+    rm ${TAG}*
     echo "Removed old DAGs."
     } || {
     echo "No previous DAGs."
     }
     # clean previous logs
     {
-    rm ${LOGDIR}/${FILETAG}*
-    echo "Removed old logs."
+    rm ${LOGDIR}/${TAG}*
+    echo "Removed old logs from ${LOGDIR}/${FILETAG}*"
     } || {
     echo "No previous logs."
     }

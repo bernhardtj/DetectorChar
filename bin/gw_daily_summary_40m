@@ -64,15 +64,15 @@ TAG=${FILETAG#* } # removes "--file-tag" from FILETAG
 if [ ! -f *.lock ]; then
     # clean previous DAGs
     {
-    rm ${TAG}*
-    echo "Removed old DAGs."
+    rm ${TAG}*.dag*
+    echo "Removed old DAGs: ${TAG}*.dag*"
     } || {
     echo "No previous DAGs."
     }
     # clean previous logs
     {
     rm ${LOGDIR}/${TAG}*
-    echo "Removed old logs from ${LOGDIR}/${FILETAG}*"
+    echo "Removed old logs: ${LOGDIR}/${TAG}*"
     } || {
     echo "No previous logs."
     }

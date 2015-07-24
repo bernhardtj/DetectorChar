@@ -11,4 +11,4 @@ DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
 . ${DIR}/functions
 
 # execute gw_daily_summary with custom list of systems
-gw_daily_summary_40m --day `date_yesterday` --file-tag gw_daily_summary_40m_rerun --maxjobs 1 --skip-html-wrapper
+bash ${DIR}/gw_daily_summary_40m --day `date_yesterday` --file-tag gw_daily_summary_40m_rerun --maxjobs 1 --skip-html-wrapper

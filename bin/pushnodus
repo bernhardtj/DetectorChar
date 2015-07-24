@@ -27,6 +27,7 @@ for d0 in */ ; do
     count=`ls -1 *.html 2>/dev/null | wc -l`
     if [ $count != 0 ]; then
       sed -i -- 's*<base href="/~40m/summary/" />*<base href="../.." />*g' *.html
+      sed -i -- 's*/home/detchar/public_html/html/fancybox/source/*html/fancybox/source/*g' *.html
     fi
     # Loop over tabs
     for d1 in */ ; do
@@ -35,6 +36,7 @@ for d0 in */ ; do
         count=`ls -1 *.html 2>/dev/null | wc -l`
         if [ $count != 0 ]; then
           sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../.." />*g' *.html
+          sed -i -- 's*/home/detchar/public_html/html/fancybox/source/*html/fancybox/source/*g' *.html
         fi
         # Loop over sub-tabs
         for d2 in */ ; do
@@ -43,6 +45,7 @@ for d0 in */ ; do
             count=`ls -1 *.html 2>/dev/null | wc -l`
             if [ $count != 0 ]; then
               sed -i -- 's*<base href="/~40m/summary/" />*<base href="../../../.." />*g' *.html
+              sed -i -- 's*/home/detchar/public_html/html/fancybox/source/*html/fancybox/source/*g' *.html
             fi
             cd ${RUN_DIRECTORY}/day/$d0/$d1
           fi

@@ -69,7 +69,10 @@ if os.path.isdir(logdir):
                     errmessage = ferr.read()
                     filedict[fileid][1] = errmessage
                     if errmessage != '':
-                        configerror = 1
+			if errmessage[:7] == 'warning':
+			    configerror = 2
+			else:
+                            configerror = 1
             else:
                 print("File not valid.\n")
 else:
@@ -148,12 +151,21 @@ if configerror == 0:
             '<font color="orange">unknown</font></h2>\n',
             '<ul>\n',
         ]
-else:
+elif configerror == 1:
     contentlines += [
         '<h2>Configuration file status: ',
         '<font color="red">error</font></h2>\n',
         '<ul>\n',
     ]
+
+elif configerror == 2:
+    contentlines += [
+        '<h2>Configuration file status: ',
+        '<font color="orange">warning</font></h2>\n',
+        '<ul>\n',
+    ]
+
+
 
 for fileid, contents in filedict.iteritems():
     name = contents[0].strip('/')
@@ -163,6 +175,8 @@ for fileid, contents in filedict.iteritems():
     errurl = "logs/gw_daily_summary%s.err" % fileid
     if contents[1] == '':
         filestatus = '<font color="green">OK</font>'
+    elif contents[1][:7] == 'warning':
+	filestatus = '<font color="orange">WARNING</font>'
     else:
         filestatus = '<font color="red">ERROR</font>'
         # in the future, we can also show error message directly rather than

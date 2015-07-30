@@ -5,7 +5,7 @@
 # Author: Max Isi <max.isi@ligo.org>
 
 NODUSWEB=/users/public_html/detcharsummary
-RUN_DIRECTORY=$HOME/public_html/summary/
+RUN_DIRECTORY=/home/40m/public_html/summary/
 
 TODAY=`date +%Y%m%d`
 YESTERDAY=`date --date='yesterday' +%Y%m%d`

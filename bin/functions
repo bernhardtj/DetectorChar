@@ -326,7 +326,7 @@ update_40m_config() {
     echo ${target}
     # pull from nodus if we can
     mkdir -p $target
-    rsync -r ${_user}@${_host}:${_path}/* ${target}/ || true
+    rsync --delete -r ${_user}@${_host}:${_path}/* ${target}/ || true
 
 #     # push changes to git backup
 #     if [[ -d "${target}/.git" ]]; then

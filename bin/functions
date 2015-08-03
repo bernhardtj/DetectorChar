@@ -3,7 +3,9 @@
 # this file contains the common functions for GW summary page automation
 #
 # Note: modified by Max Isi for the 40m (July 16, 2015)
-#   - Default Kerberos credentials.
+#   - Default Kerberos credentials;
+#   - Use "condor_q -wide -s" in wait_for_dag_and_exit() to make condor_q work
+#     with user "40m".
 
 # -- variables ----------------------------------------------------------------
 
@@ -298,7 +300,7 @@ wait_for_dag_and_exit() {
         return 1
     else
         # get parent ID
-        CID=$(condor_q -wide $USER | grep ${SUMMARY_JOB} | cut -d\  -f 1)
+        CID=$(condor_q -wide -s $USER | grep ${SUMMARY_JOB} | cut -d\  -f 1)
         # reset condor shadow parameters to prevent annoying hold
         if [ -n "${CID}" ]; then
             echo "Resetting shadow parameters for condor id $CID..."

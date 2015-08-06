@@ -43,7 +43,7 @@ if os.path.isdir(logdir):
         with open(outfile, 'r') as fout:
             lines = fout.readlines()
             # check file has the right date
-            if lines[6].startswith("Start time") and lines[6].split()[2]:
+            if len(lines)>5 and lines[6].startswith("Start time") and lines[6].split()[2]:
                 if VERBOSE:
                     print("File is valid.\n")
                 filesfound += 1
@@ -69,7 +69,7 @@ if os.path.isdir(logdir):
                     errmessage = ferr.read()
                     filedict[fileid][1] = errmessage
                     if errmessage != '':
-			if errmessage[:7] == 'warning':
+			if errmessage[:7] == 'warning' or 'UserWarning' in errmessage:
 			    configerror = 2
 			else:
                             configerror = 1
@@ -114,7 +114,7 @@ if codestatus == 0:
         'status of the individual configuration files below to see if there '
         'are syntax errors (click on the "err" link to see the error message, '
         'if one was produced).</p>\n',
-        '<p>If you still think something else is wrong,'
+        '<p>If you still think something is wrong,'
         ' <a href="mailito:misi@ligo.caltech.edu" target="_blank">report an '
         'issue</a>.</p>\n'
     ]
@@ -175,7 +175,7 @@ for fileid, contents in filedict.iteritems():
     errurl = "logs/gw_daily_summary%s.err" % fileid
     if contents[1] == '':
         filestatus = '<font color="green">OK</font>'
-    elif contents[1][:7] == 'warning':
+    elif contents[1][:7] == 'warning' or 'UserWarning' in contents[1]:
 	filestatus = '<font color="orange">WARNING</font>'
     else:
         filestatus = '<font color="red">ERROR</font>'

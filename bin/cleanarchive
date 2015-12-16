@@ -1,0 +1,22 @@
+#!/bin/bash -l
+#
+# This script deletes old GWsumm archival data.
+# It removes the archive files corresponding to "two months ago".
+# For example, if it runs on Nov 1, it will delete all archives
+# between Sep 1 - Sep 30.
+
+BASEDIR="$HOME/public_html/summary/day/"
+
+# get month and year corresponding to "two months ago"
+MONTHNUM=`date --date="$(date +%Y-%m-15) -2 month" +%m`
+YEARNUM=`date --date="$(date +%Y-%m-15) -2 month" +%Y`
+
+for dir in $BASEDIR/*/
+do
+  if [[ $dir == *"${YEARNUM}${MONTHNUM}"* ]]; then
+    archdir="$dir/archive/"
+    if [ -d $archdir ]; then
+      rm $archdir/*
+    fi
+  fi
+done

@@ -48,8 +48,8 @@ if [[ "${SUMMARY_ARGUMENTS}" == *"config-file"* ]]; then
 else
     CONFIGURATIONS=`get_config-file_and_priority_args`
 fi
-NPROC=`parse_argument_default multi-process 16`
-MAXJOBS=`parse_argument_default maxjobs 2`
+NPROC=`parse_argument_default multi-process 8`
+MAXJOBS=`parse_argument_default maxjobs 4`
 CONDORCMD=`get_condor_arguments`
 FILETAG=`parse_argument_default file-tag gw_daily_summary`
 

@@ -23,7 +23,7 @@ else:
 
 TODAY = datetime.datetime.utcnow().strftime('%Y-%m-%d')
 
-VERBOSE = 0
+VERBOSE = 1 
 
 # GET LOGS
 filedict = {}
@@ -37,13 +37,13 @@ if os.path.isdir(logdir):
     for outfile in glob(pathmask):
         filename = os.path.basename(outfile)
         if VERBOSE:
-            print("Checking %s. " % filename)
+            print("Checking %s " % filename)
         fileid = filename.strip('gw_daily_summary').strip('.out')
         tablist = []
         with open(outfile, 'r') as fout:
             lines = fout.readlines()
             # check file has the right date
-            if len(lines)>5 and lines[6].startswith("Start time") and lines[6].split()[2]:
+            if len(lines)>5 and lines[2].startswith("Welcome to the GW summary"):
                 if VERBOSE:
                     print("File is valid.\n")
                 filesfound += 1

@@ -27,7 +27,11 @@ echo "Moved to output directory ${SUMMARY_OUT}"
 # -- set environment ----------------------------
 IFO="C1"
 set_site_environment
-. /home/detchar/opt/gwpysoft/etc/gwpy-user-env.sh
+activate_gwpysoft
+echo "Entered virtualenv from ${VIRTUAL_ENV}"
+if command -v icc 1>/dev/null && [ -f ${GWPYSOFT_MKL_BASE}/etc/gwpy-user-env.sh ]; then
+    activate_mkl_numpy_scipy && echo "Activated MKL-compiled numpy/scipy"
+fi
 cleanpath PYTHONPATH
 cleanpath PATH
 echo "Environment set"

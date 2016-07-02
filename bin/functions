@@ -23,6 +23,21 @@ if [ "${USER}" == "detchar" ]; then
     unset X509_USER_PROXY
 fi
 
+PYTHON_VERSION=$(
+    python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+GWPYSOFT_VIRTUAL_ENV="/home/detchar/opt/gwpysoft-${PYTHON_VERSION}"
+GWPYSOFT_MKL_BASE="${GWPYSOFT_VIRTUAL_ENV}-mkl"
+
+# -- environment --------------------------------------------------------------
+
+activate_gwpysoft() {
+    . ${GWPYSOFT_VIRTUAL_ENV}/bin/activate
+}
+
+activate_mkl_numpy_scipy() {
+    . ${GWPYSOFT_MKL_BASE}/etc/gwpy-user-env.sh
+}
+
 # -- generic functions --------------------------------------------------------
 
 echoerr() {
@@ -112,6 +127,14 @@ set_site_environment() {
     ifo=`echo $IFO | awk '{print tolower($0)}'`
     SITE=${IFO:0:1}
     site=${ifo:0:1}
+}
+
+activate_gwpysoft() {
+    . ${GWPYSOFT_VIRTUAL_ENV}/bin/activate
+}
+
+deactivate_gwpysoft() {
+    ${GWPYSOFT_VIRTUAL_ENV}/bin/deactivate
 }
 
 # -- git ----------------------------------------------------------------------
@@ -342,3 +365,38 @@ update_40m_config() {
     # find all systems
     export SUMMARY_SYSTEMS=`find_all_systems $target $ifo`
 }
+
+# -- clean --------------------------------------------------------------------
+
+clean_archive() {
+    local day=$1
+    local archivedir=${SUMMARY_OUT}/day/${day}/archive
+    # check directory
+    if [ ! -d "${archivedir}" ]; then
+        echo "No archive directory found for ${day}"
+        return 2
+    # allow manual preservation of archives
+    elif [ -f "${archivedir}/KEEP" ]; then
+        echo "Found KEEP, not deleting archives"
+        return 1
+    # otherwise, delete them. Delete them all!
+    else
+        rm -f ${archivedir}/*.hdf
+        echo "Cleaned archive for ${day}"
+    fi
+}
+
+clean_logs() {
+    local ndays=$1
+    [ -z $ndays ] && local ndays=7
+    local logdir=${SUMMARY_OUT}/logs
+    _message=`find ${logdir}/ -type f -mtime +${ndays} -exec rm {} \;`
+    if [ $? -eq 0 ]; then
+        echo "Cleaned logs older than ${ndays} days"
+    else
+        echo ${_message}
+        return 1
+    fi
+}
+                                                                                                    405,1         Bot
+

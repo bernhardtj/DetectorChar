@@ -74,7 +74,7 @@ scp ${RUN_DIRECTORY}/status.html controls@nodus.ligo.caltech.edu:${NODUSWEB}/sta
 
 # rsync data (if it exists)
 for d0 in ${TODAY} ${YESTERDAY} ${TOMORROW}; do
-  if [ -d "${RUN_DIRECTORY}/day/${TOMORROW}" ]; then
+  if [ -d "$d0" ]; then
     rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${d0}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${d0}
   fi
 done

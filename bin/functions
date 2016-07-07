@@ -366,6 +366,19 @@ update_40m_config() {
     export SUMMARY_SYSTEMS=`find_all_systems $target $ifo`
 }
 
+update_40m_medm() {
+    local target=$1
+    [ -z $target ] && local target="${SUMMARY_OUT}/medm"
+    local _user="controls"
+    local _host="nodus.ligo.caltech.edu"
+    local _path="/cvs/cds/caltech/users/public_html/detcharsummary/medm"
+
+    echo ${target}
+    # pull from nodus if we can
+    mkdir -p $target
+    rsync --delete -r ${_user}@${_host}:${_path}/* ${target}/ || true
+}
+
 # -- clean --------------------------------------------------------------------
 
 clean_archive() {

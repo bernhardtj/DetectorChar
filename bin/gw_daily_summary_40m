@@ -38,6 +38,7 @@ echo "Environment set"
 
 # -- update config files -------------------
 update_40m_config
+update_40m_medm
 echo "Pulled from 40m"
 
 # -- set kerberos environment -------------------

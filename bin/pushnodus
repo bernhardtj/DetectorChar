@@ -11,6 +11,10 @@ TODAY=`date +%Y%m%d`
 YESTERDAY=`date --date='yesterday' +%Y%m%d`
 TOMORROW=`date --date='tomorrow' +%Y%m%d`
 
+echo ${TODAY}
+echo ${YESTERDAY}
+echo ${TOMORROW}
+
 # check code status
 DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
 python ${DIR}/checkstatus
@@ -21,8 +25,11 @@ python ${DIR}/checkstatus
 cd ${RUN_DIRECTORY}/day
 
 # Loop over days
-for d0 in */ ; do
-  if [[ "$d0" == ${TODAY}"/" || $d0 == ${YESTERDAY}"/" || "$d0" == ${TOMORROW}"/" ]]; then 
+echo "Looping over days"
+
+for d0 in ${TODAY} ${YESTERDAY} ${TOMORROW}; do
+  if [[ -d "$d0" ]]; then
+    echo $d0 
     cd $d0
     count=`ls -1 *.html 2>/dev/null | wc -l`
     if [ $count != 0 ]; then
@@ -56,26 +63,24 @@ for d0 in */ ; do
     cd ${RUN_DIRECTORY}/day/
   fi
 done
- 
+
 ################################################################################
 # Perform sync
+
+echo "Syncing files"
 
 # push status page
 scp ${RUN_DIRECTORY}/status.html controls@nodus.ligo.caltech.edu:${NODUSWEB}/status.html > /dev/null 2>&1
 
+# rsync data (if it exists)
+for d0 in ${TODAY} ${YESTERDAY} ${TOMORROW}; do
+  if [ -d "${RUN_DIRECTORY}/day/${TOMORROW}" ]; then
+    rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${d0}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${d0}
+  fi
+done
+
 # rsync logs
 rsync --exclude archive/ -rz ${RUN_DIRECTORY}/logs/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/logs
-
-# rsync today's data
-rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TODAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TODAY}
-
-# rsync yesterday's data
-rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${YESTERDAY}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${YESTERDAY} 
-
-# rsync tomorrow's data (if it exists)
-if [ -d "${RUN_DIRECTORY}/day/${TOMORROW}" ]; then
-  rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${TOMORROW}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${TOMORROW} 
-fi
 
 ################################################################################
 # Write log
@@ -86,3 +91,4 @@ fi
   echo "Last push to nodus: $NOW" > $LOGDIR
 }
 
+echo "Done"

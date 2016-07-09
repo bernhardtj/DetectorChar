@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash -le
 #
 # LIGO daily summary page script
 #
@@ -14,15 +14,19 @@ echo "-- Welcome to the gw_summary DAG generator -------------------------------
 # get basic environment
 DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
 . ~/.bash_profile
+echo -n "Profile set, "
 . $DIR/functions
+echo "environment set, let's go."
+
+echo "Identified summary job as \"${_SUMMARY_JOB}\""
 
 # catch command line options
-SUMMARY_ARGUMENTS="$@"
+_SUMMARY_ARGUMENTS="$@"
 
 # move to output directory
-mkdir -p ${SUMMARY_OUT}
-cd ${SUMMARY_OUT}
-echo "Moved to output directory ${SUMMARY_OUT}"
+mkdir -p ${_SUMMARY_OUT}
+cd ${_SUMMARY_OUT}
+echo "Moved to output directory ${_SUMMARY_OUT}"
 
 # -- set environment ----------------------------
 IFO="C1"
@@ -32,8 +36,6 @@ echo "Entered virtualenv from ${VIRTUAL_ENV}"
 if command -v icc 1>/dev/null && [ -f ${GWPYSOFT_MKL_BASE}/etc/gwpy-user-env.sh ]; then
     activate_mkl_numpy_scipy && echo "Activated MKL-compiled numpy/scipy"
 fi
-cleanpath PYTHONPATH
-cleanpath PATH
 echo "Environment set"
 
 # -- update config files -------------------
@@ -42,13 +44,13 @@ update_40m_medm
 echo "Pulled from 40m"
 
 # -- set kerberos environment -------------------
-get_robot_kerberos_ticket
+klist -s &>/dev/null || get_robot_kerberos_ticket
 check_kerberos_ticket || exit $?
 echo "Kerberos ticket verified"
 
 # -- parse arguments ----------------------------
 # parse arguments with defaults
-if [[ "${SUMMARY_ARGUMENTS}" == *"config-file"* ]]; then
+if [[ "${_SUMMARY_ARGUMENTS}" == *"config-file"* ]]; then
     CONFIGURATIONS=""
 else
     CONFIGURATIONS=`get_config-file_and_priority_args`
@@ -56,13 +58,13 @@ fi
 NPROC=`parse_argument_default multi-process 8`
 MAXJOBS=`parse_argument_default maxjobs 4`
 CONDORCMD=`get_condor_arguments`
-FILETAG=`parse_argument_default file-tag gw_daily_summary`
+FILETAG=`parse_argument_default file-tag ${_SUMMARY_JOB}`
 
 # set arguments
 OPTIONS="
---verbose ${FILETAG} --archive --ifo ${ifo} --log-dir ${LOGDIR}
-${CONFIGURATIONS} ${CONDORCMD} ${MAXJOBS} ${NPROC} --on-segdb-error warn"
-ARGUMENTS=$(eval echo ${SUMMARY_ARGUMENTS})
+--verbose ${FILETAG} --archive --ifo ${IFO} --log-dir ${LOGDIR}
+${CONFIGURATIONS} ${CONDORCMD} ${MAXJOBS} ${NPROC} --on-segdb-error warn --on-datafind-error warn"
+ARGUMENTS=$(eval echo ${_SUMMARY_ARGUMENTS})
 
 # clean up
 TAG=${FILETAG#* } # removes "--file-tag" from FILETAG

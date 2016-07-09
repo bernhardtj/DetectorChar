@@ -10,5 +10,13 @@
 DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
 . ${DIR}/functions
 
+# parse default arguments
+_SUMMARY_ARGUMENTS="$@"
+DAY=$(parse_argument_default day `date_yesterday`)
+MAXJOBS=$(parse_argument_default maxjobs 1)
+NPROC=$(parse_argument_default multi-process 12)
+
+export ACCOUNT_GROUP_USER=max.isi
+
 # execute gw_daily_summary with custom list of systems
-bash ${DIR}/gw_daily_summary_40m --day `date_yesterday` --file-tag gw_daily_summary_40m_rerun --maxjobs 1 --skip-html-wrapper
+bash ${DIR}/gw_daily_summary_40m ${DAY} ${MAXJOBS} ${NPROC} $@

@@ -14,15 +14,19 @@
 [ -z "$ACCOUNT_GROUP_USER" ] && ACCOUNT_GROUP_USER="max.isi"
 
 # summary variables
-[ -z "$SUMMARY_OUT" ] && SUMMARY_OUT="${HOME}/public_html/summary"
-[ -z "$SUMMARY_REPO" ] && SUMMARY_REPO="${HOME}/etc/summary"
-[ -z "$SUMMARY_CONFIG" ] && SUMMARY_CONFIG="${SUMMARY_REPO}/configurations"
-[ -z "$LOGDIR" ] && LOGDIR="${SUMMARY_OUT}/logs"
+[ -z "$_SUMMARY_OUT" ] && export _SUMMARY_OUT="${HOME}/public_html/summary"
+[ -z "$_SUMMARY_REPO" ] && export _SUMMARY_REPO="${HOME}/etc/summary"
+[ -z "$_SUMMARY_CONFIG" ] && export _SUMMARY_CONFIG="${_SUMMARY_REPO}/configurations"
+[ -z "$_SUMMARY_NAGIOS" ] && export _SUMMARY_NAGIOS="${_SUMMARY_OUT}/nagios"
+[ -z "$_SUMMARY_JOB" ] && export _SUMMARY_JOB=`basename "$0"`
+[ -z "$LOGDIR" ] && LOGDIR="${_SUMMARY_OUT}/logs"
 
+# workaround auth issues
 if [ "${USER}" == "detchar" ]; then
     unset X509_USER_PROXY
 fi
 
+# set python variables
 PYTHON_VERSION=$(
     python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 GWPYSOFT_VIRTUAL_ENV="/home/detchar/opt/gwpysoft-${PYTHON_VERSION}"
@@ -142,10 +146,13 @@ deactivate_gwpysoft() {
 # refresh repository
 update_summary_git() {
     local repodir=$1
-    [ -z $repodir ] && local repodir=${SUMMARY_REPO}
+    [ -z $repodir ] && local repodir=${_SUMMARY_REPO}
     if [ -d ${repodir}/.git ]; then
         cd $repodir
-        git pull 1> /dev/null && cd - 1>/dev/null || return $?
+        timeout 10 git pull
+        EC=$?
+        cd - 1>/dev/null
+        return $EC
     else
         echoerr "Cannot local summary git repo in $repordir"
         return 1
@@ -159,7 +166,7 @@ parse_argument_default() {
     shift
     local default=$@
     # test clargs param for argument
-    if [[ "${SUMMARY_ARGUMENTS}" == *"$argname"* ]]; then
+    if [[ "${_SUMMARY_ARGUMENTS}" == *"$argname"* ]]; then
         echo ""
     else
         echo --$argname $default
@@ -168,32 +175,34 @@ parse_argument_default() {
 
 # -- configurations -----------------------------------------------------------
 
-[ -z "$SUMMARY_SYSTEMS" ] && SUMMARY_SYSTEMS="
-psl hoft hoft-science calibration pcal guardian
-imc lsc lsc-darm omc
+[ -z "$_SUMMARY_SYSTEMS" ] && _SUMMARY_SYSTEMS="
+psl hoft hoft-science hoft-lines calibration pcal guardian
+imc lsc lsc-darm asc omc
 sei sei2 sei-quiet sei-noisy sei_watchdogs
-sus sus2 sus-oplev sus-modes
+sus sus2 sus-oplev
 pem tcs
-hveto daily_ihope pcat kleinewelle idq analysis upv stamp
+kleinewelle pycbc analysis
+hveto pcat idq upv stamp fscan
+detchar
 "
 
 get_fast_systems() {
-    if [ -z "${SUMMARY_SYSTEMS_FAST}" ]; then
+    if [ -z "${_SUMMARY_SYSTEMS_FAST}" ]; then
         echo "hoft hoft-science calibration guardian"
     else
-        echo ${SUMMARY_SYSTEMS_FAST}
+        echo ${_SUMMARY_SYSTEMS_FAST}
     fi
 }
 
 get_slow_systems() {
-    if [ -z "${SUMMARY_SYSTEMS_SLOW}" ]; then
-        local slowsystems="${SUMMARY_SYSTEMS}"
+    if [ -z "${_SUMMARY_SYSTEMS_SLOW}" ]; then
+        local slowsystems="${_SUMMARY_SYSTEMS}"
         for fastsystem in `get_fast_systems`; do
             slowsystems=`echo ${slowsystems} | sed -e 's/'$fastsystem' //g'`
         done
         echo $slowsystems
     else
-        echo ${SUMMARY_SYSTEMS_SLOW}
+        echo ${_SUMMARY_SYSTEMS_SLOW}
     fi
 }
 
@@ -204,15 +213,15 @@ get_config-file_and_priority_args() {
     # parse requested systems
     local system=""
     local systems="$@"
-    [ -z "$systems" ] && systems=${SUMMARY_SYSTEMS}
+    [ -z "$systems" ] && systems=${_SUMMARY_SYSTEMS}
     # get IFO if needed
     [ -z $IFO ] && set_site_environment
     # get defaults
     if [[ "G1 V1 C1" =~ ${IFO} &&
-          -f ${SUMMARY_CONFIG}/${ifo}/defaults.ini ]]; then
-        config_file="--global-config ${SUMMARY_CONFIG}/${ifo}/defaults.ini"
+          -f ${_SUMMARY_CONFIG}/${ifo}/defaults.ini ]]; then
+        config_file="--global-config ${_SUMMARY_CONFIG}/${ifo}/defaults.ini"
     else
-        config_file="--global-config ${SUMMARY_CONFIG}/defaults.ini"
+        config_file="--global-config ${_SUMMARY_CONFIG}/defaults.ini"
     fi
 
     # loop over systems, finding config files
@@ -220,29 +229,29 @@ get_config-file_and_priority_args() {
         local ini=""
         if [[ "H1 L1" =~ ${IFO} ]]; then
             # find common ini
-            if [ -f ${SUMMARY_CONFIG}/common/${system}.ini ]; then
-                 ini="${SUMMARY_CONFIG}/common/${system}.ini"
+            if [ -f ${_SUMMARY_CONFIG}/common/${system}.ini ]; then
+                 ini="${_SUMMARY_CONFIG}/common/${system}.ini"
             fi
             # find IFO ini
-            if [ -f ${SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini ]; then
+            if [ -f ${_SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini ]; then
                 if [ ! -z "${ini}" -a "${ini}" != " " ]; then
-                    ini="${ini},${SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
+                    ini="${ini},${_SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
                 else
-                    ini="${SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
+                    ini="${_SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
                 fi
             fi
         elif [[ "G1 V1 C1" =~ ${IFO} ]]; then
-            if [ -f ${SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini ]; then
-                ini="${SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
+            if [ -f ${_SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini ]; then
+                ini="${_SUMMARY_CONFIG}/${ifo}/${ifo}${system}.ini"
             fi
         else
             # find multi-IFO ini
-            if [ -f ${SUMMARY_CONFIG}/multi/${system}.ini ]; then
-                ini="${SUMMARY_CONFIG}/multi/${system}.ini"
+            if [ -f ${_SUMMARY_CONFIG}/multi/${system}.ini ]; then
+                ini="${_SUMMARY_CONFIG}/multi/${system}.ini"
             fi
         fi
         # set proirity
-        if [[ "$system" =~ ^hoft.*|^lsc.*|guardian.* ]]; then
+        if [[ "$system" =~ ^hoft.*|^guardian.* ]]; then
             _this_p=2
         elif [[ "$system" =~ ^sei*|^sus.* ]]; then
             _this_p=0
@@ -268,23 +277,46 @@ find_all_systems() {
 # -- condor -------------------------------------------------------------------
 
 get_condor_accounting_cmd() {
-    if [ "${USER}" == "detchar" ]; then
-        local mode="prod"
-    else
-        local mode="dev"
+    local tag=$1
+    [ -z $tag ] && local tag="${_SUMMARY_JOB}"
+    if [[ -n "${_CONDOR_SLOT+x}" ]]; then
+        CID=`get_condor_id $tag`
+        if [[ $CID =~ ^[0-9]+$ ]]; then
+            ACCOUNTING_TAG=`condor_q $CID -autof AccountingGroup`
+            NPARTS=`echo ${ACCOUNTING_TAG} | tr "." " " | wc -w`
+            ACCOUNTING_GROUP=`echo ${ACCOUNTING_TAG} | cut -d. -f -$((NPARTS-2))`
+            ACCOUNTING_USER=`echo ${ACCOUNTING_TAG} | cut -d. -f $((NPARTS-1))-`
+        else
+            echo "Failed to parse cluster ID for SummaryPage manager" 1>&2
+        fi
     fi
-    echo "--condor-command=accounting_group=ligo.$mode.o1.detchar.daily.summary --condor-command=accounting_group_user=${ACCOUNT_GROUP_USER}"
+    if [[ -z ${ACCOUNTING_TAG} ]]; then
+        if [ "${USER}" == "detchar" ] || [ "${USER}" == "40m" ]; then
+            local mode="prod"
+            [ -z $IFO ] && set_site_environment
+            if [ ${IFO} == "C1" ]; then
+                ACCOUNTING_USER="max.isi"
+            else
+                ACCOUNTING_USER="duncan.macleod"
+            fi
+        else
+            local mode="dev"
+            ACCOUNTING_USER=$USER
+        fi
+        ACCOUNTING_GROUP="ligo.$mode.o1.detchar.daily.summary"
+    fi
+    echo "--condor-command=accounting_group=${ACCOUNTING_GROUP} --condor-command=accounting_group_user=${ACCOUNTING_USER}"
 }
 
 get_condor_notify_cmd() {
-    if [ -n "$SUMMARY_CONDOR_NOTIFY" ]; then
+    if [ -n "$_SUMMARY_CONDOR_NOTIFY" ]; then
         echo "--condor-command=notify_user=${CONDOR_NOTIFY} --condor-command=notification=Error"
     fi
 }
 
 get_condor_universe_cmd() {
-    if [ -n "$SUMMARY_CONDOR_UNIVERSE" ]; then
-        echo "--universe ${UNIVERSE}"
+    if [ -n "$_SUMMARY_CONDOR_UNIVERSE" ]; then
+        echo "--universe ${_SUMMARY_CONDOR_UNIVERSE}"
     else
         echo "--universe local"
     fi
@@ -305,11 +337,16 @@ get_condor_arguments() {
     echo $condorcmd
 }
 
-# -- DAG generation -----------------------------------------------------------
+get_condor_id() {
+    local tag=$1
+    condor_q -constraint \
+        "Owner==\"${USER}\" && SummaryPageManager==\"${tag}\"" \
+        -autof ClusterId
+}
 
 wait_for_dag_and_exit() {
     local dagfile=$1
-    [ -z ${SUMMARY_JOB} ] && local SUMMARY_JOB=`basename ${dagfile%.*}`
+    [ -z ${_SUMMARY_JOB} ] && local _SUMMARY_JOB=`basename ${dagfile%.*}`
     # wait for 10 seconds for DAG lock file to generate
     sleep 10
     # wait for lock file to disappear
@@ -323,14 +360,14 @@ wait_for_dag_and_exit() {
         return 1
     else
         # get parent ID
-        CID=$(condor_q -wide -s $USER | grep ${SUMMARY_JOB} | cut -d\  -f 1)
+        CID=`get_condor_id ${_SUMMARY_JOB}`
         # reset condor shadow parameters to prevent annoying hold
         if [ -n "${CID}" ]; then
             echo "Resetting shadow parameters for condor id $CID..."
             condor_qedit ${CID} NumShadowExceptions 0
             condor_qedit ${CID} NumShadowStarts 0
         else
-            echo "Failed to find condor id for persistent job ${SUMMARY_JOB}"
+            echo "Failed to find condor id for persistent job ${_SUMMARY_JOB}" 1>&2
         fi
         # move DAG logfile out of the way to prevent continuous append
         mv ${dagfile}.dagman.out ${dagfile}.dagman.out.old
@@ -343,12 +380,11 @@ wait_for_dag_and_exit() {
 
 update_40m_config() {
     local target=$1
-    [ -z $target ] && local target=${SUMMARY_CONFIG}/${ifo}
+    [ -z $target ] && local target=${_SUMMARY_CONFIG}/${ifo}
     local _user="controls"
     local _host="nodus.ligo.caltech.edu"
     local _path="/cvs/cds/caltech/chans/GWsummaries"
 
-    echo ${target}
     # pull from nodus if we can
     mkdir -p $target
     rsync --delete -r ${_user}@${_host}:${_path}/* ${target}/ || true
@@ -363,12 +399,12 @@ update_40m_config() {
 #     fi
 
     # find all systems
-    export SUMMARY_SYSTEMS=`find_all_systems $target $ifo`
+    export _SUMMARY_SYSTEMS=`find_all_systems $target $ifo`
 }
 
 update_40m_medm() {
     local target=$1
-    [ -z $target ] && local target="${SUMMARY_OUT}/medm"
+    [ -z $target ] && local target="${_SUMMARY_OUT}/medm"
     local _user="controls"
     local _host="nodus.ligo.caltech.edu"
     local _path="/cvs/cds/caltech/users/public_html/detcharsummary/medm"
@@ -383,7 +419,7 @@ update_40m_medm() {
 
 clean_archive() {
     local day=$1
-    local archivedir=${SUMMARY_OUT}/day/${day}/archive
+    local archivedir=${_SUMMARY_OUT}/day/${day}/archive
     # check directory
     if [ ! -d "${archivedir}" ]; then
         echo "No archive directory found for ${day}"
@@ -402,7 +438,7 @@ clean_archive() {
 clean_logs() {
     local ndays=$1
     [ -z $ndays ] && local ndays=7
-    local logdir=${SUMMARY_OUT}/logs
+    local logdir=${_SUMMARY_OUT}/logs
     _message=`find ${logdir}/ -type f -mtime +${ndays} -exec rm {} \;`
     if [ $? -eq 0 ]; then
         echo "Cleaned logs older than ${ndays} days"
@@ -411,5 +447,3 @@ clean_logs() {
         return 1
     fi
 }
-                                                                                                    405,1         Bot
-

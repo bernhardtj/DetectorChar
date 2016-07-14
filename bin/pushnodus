@@ -7,13 +7,20 @@
 NODUSWEB=/users/public_html/detcharsummary
 RUN_DIRECTORY=/home/40m/public_html/summary/
 
-TODAY=`date +%Y%m%d`
-YESTERDAY=`date --date='yesterday' +%Y%m%d`
-TOMORROW=`date --date='tomorrow' +%Y%m%d`
+if [ "$#" -ne 0 ]; then
+  echo "User-provided dates:"
+  DATES=( "$@" )
+else
+  echo "Default dates:"
+  TODAY=`date +%Y%m%d`
+  YESTERDAY=`date --date='yesterday' +%Y%m%d`
+  TOMORROW=`date --date='tomorrow' +%Y%m%d`
+  DATES=( "${TODAY}" "${YESTERDAY}" "${TOMORROW}" )
+fi
 
-echo ${TODAY}
-echo ${YESTERDAY}
-echo ${TOMORROW}
+for i in "${DATES[@]}"; do
+  echo $i
+done
 
 # check code status
 DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
@@ -25,9 +32,9 @@ python ${DIR}/checkstatus
 cd ${RUN_DIRECTORY}/day
 
 # Loop over days
-echo "Looping over days"
+echo "Looping over days."
 
-for d0 in ${TODAY} ${YESTERDAY} ${TOMORROW}; do
+for d0 in "${DATES[@]}"; do
   if [[ -d "$d0" ]]; then
     echo $d0 
     cd $d0
@@ -73,7 +80,7 @@ echo "Syncing files"
 scp ${RUN_DIRECTORY}/status.html controls@nodus.ligo.caltech.edu:${NODUSWEB}/status.html > /dev/null 2>&1
 
 # rsync data (if it exists)
-for d0 in ${TODAY} ${YESTERDAY} ${TOMORROW}; do
+for d0 in "${DATES[@]}"; do
   if [ -d "$d0" ]; then
     rsync --exclude archive/ -rz ${RUN_DIRECTORY}/day/${d0}/ controls@nodus.ligo.caltech.edu:${NODUSWEB}/day/${d0}
   fi

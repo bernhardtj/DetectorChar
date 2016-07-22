@@ -2,6 +2,13 @@
 #
 # Pushes 40m summary pages to nodus.
 #
+# When run without any options, the script syncs the files corresponding to the
+# current, previous and following UTC days; alternatively, a UTC date or list 
+# of dates in the format YYYYMMDD can be passed as arguments to rsync only 
+# those particular days, e.g.
+#    ./DetectorChar/bin/pushnodus 20160701 20160702
+# will synchronize the directories corresponding to July 1 and July 2, 2016. 
+#
 # Author: Max Isi <max.isi@ligo.org>
 
 NODUSWEB=/users/public_html/detcharsummary

@@ -15,6 +15,7 @@ USER = os.environ['USER']
 HOME = os.environ["HOME"]
 TMPDIR = '/usr1/%s/' % USER
 WEB = os.path.join(HOME, "public_html/summary/")
+LOGNAME = "gw_daily_summary_40m"
 
 if len(sys.argv) == 2:
     logdir = os.path.abspath(sys.argv[1])
@@ -30,7 +31,7 @@ filedict = {}
 filesfound = 0
 configerror = 0
 if os.path.isdir(logdir):
-    pathmask = os.path.join(logdir, "gw_daily_summary-*.out")
+    pathmask = os.path.join(logdir, "%s-*.out" % LOGNAME)
     if VERBOSE:
         print "Looking for files matching: %s." % pathmask
     # get all out log files
@@ -38,7 +39,7 @@ if os.path.isdir(logdir):
         filename = os.path.basename(outfile)
         if VERBOSE:
             print("Checking %s " % filename)
-        fileid = filename.strip('gw_daily_summary').strip('.out')
+        fileid = filename.strip(LOGNAME).strip('.out')
         tablist = []
         with open(outfile, 'r') as fout:
             lines = fout.readlines()
@@ -63,8 +64,8 @@ if os.path.isdir(logdir):
                 # add entry for file: first element tabs, second error message
                 filedict[fileid] = [tabstring, '']
                 # open corresponding err file
-                errfile = os.path.join(logdir, "gw_daily_summary%s.err" %
-                                       fileid)
+                errfile = os.path.join(logdir, "%s%s.err" %
+                                       (LOGNAME, fileid))
                 with open(errfile, 'r') as ferr:
                     errmessage = ferr.read()
                     filedict[fileid][1] = errmessage
@@ -171,8 +172,8 @@ for fileid, contents in filedict.iteritems():
     name = contents[0].strip('/')
     if name == '':
         name = "Unknown name"
-    logurl = "logs/gw_daily_summary%s.out" % fileid
-    errurl = "logs/gw_daily_summary%s.err" % fileid
+    logurl = "logs/%s%s.out" % (LOGNAME, fileid)
+    errurl = "logs/%s%s.err" % (LOGNAME, fileid)
     if contents[1] == '':
         filestatus = '<font color="green">OK</font>'
     elif contents[1][:7] == 'warning' or 'UserWarning' in contents[1]:

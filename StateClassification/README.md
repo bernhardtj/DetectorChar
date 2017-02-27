@@ -11,21 +11,14 @@
 
 ### Input Data Format
 
-Each column is one time series for a specific frequency band. The points in the time series are
-vectors to incorporate data from multiple channels. Python script to get data and organize into this format?
+Each column row is a time point, with 12 features corresponding to its Channel 1 and Channel 2 frequency band readings. The Python script to access and compile data into this format can be found as 'getData.py'. 
 
-|  Time  | 0.03 - 0.1 Hz |  0.1 - 0.3 Hz | 0.3 - 1 Hz
-|--------|:-------------:|:-------------:|:----------:
-|    1   |   {ch1, ch2}  |   {ch1, ch2}  | {ch1, ch2}
-|    2   |   {ch1, ch2}  |   {ch1, ch2}  | {ch1, ch2}
-|    3   |   {ch1, ch2}  |   {ch1, ch2}  | {Ch1, ch2}
-|    4   |   {ch1, ch2}  |   {ch1, ch2}  | {ch1, ch2}
-|    5   |   {ch1, ch2}  |   {ch1, ch2}  | {ch1, ch2}
 
 ### Classification Possibilities
 <p> Experiment in Matlab with: </p>
 <ol>
-<li><em>Self-organizing map</em></li>
+<li><em>Self-organizing map - unsupervised neural network to find clusters within dataset</em></li>
+
 <li><em>Competitive learning/layers</em></li>
 <li><em>k-means clustering</em></li>
 </ol>

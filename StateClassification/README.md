@@ -36,7 +36,7 @@ Clustering methods can be divided into five types, of which partitioning and mod
 
 ### Input Data Format
 
-Each column row is a time point, with 12 features corresponding to the following 12 channels: 
+Each column row is a time point, with 12 features corresponding to the following 12 channels:  
 C1:PEM-RMS_BS_X_0p03_0p1  
 C1:PEM-RMS_BS_X_0p1_0p3  
 C1:PEM-RMS_BS_X_0p3_1  

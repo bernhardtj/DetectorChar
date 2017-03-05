@@ -13,20 +13,22 @@ import nds2
 
 ifo = 'C1'
 # Setup connection to the NDS
-conn = nds2.connection('nds40.ligo.caltech.edu', 31200)
+ndsServer  = 'nds40.ligo.caltech.edu'
+portNumber = 31200
+conn       = nds2.connection(ndsServer, portNumber)
 
 # Setup start and stop times
-times = '2017-03-01 00:00:00'
-t = Time(times, format='iso', scale='utc')
+times   = '2017-03-01 00:00:00'
+t       = Time(times, format='iso', scale='utc')
 t_start = int(t.gps)
-dur = 1000
+dur     = 1000
 
 # channel names
 chan_head = ifo + ':' + 'PEM-' + 'RMS' + '_'
-sensors = {'BS'}
-dofs = {'X', 'Y', 'Z'}
-bands = {'0p03_0p1', '0p1_0p3', '0p3_1', '1_3', '3_10', '10_30'}
-channels = []
+sensors   = {'BS'}
+dofs      = {'X', 'Y', 'Z'}
+bands     = {'0p03_0p1', '0p1_0p3', '0p3_1', '1_3', '3_10', '10_30'}
+channels  = []
 # why is the channel ordering so weird?
 # need to use sorted to preserve the intended ordering
 for sensor in sorted(sensors):
@@ -36,7 +38,7 @@ for sensor in sorted(sensors):
             #print channel
             channels.append(channel)
 
-
+print("Getting data from " + ndsServer + "...")
 data = conn.fetch(t_start, t_start + dur, channels)
 
 if __debug__:
@@ -51,8 +53,9 @@ for k in range(len(channels)):
     vdata.append(data[k].data)
 
 # save to a hdf5 format that matlab can read (why is compression off by default?)
-sio.savemat('data_array.mat', mdict={'data': vdata}, do_compression=True)
-
+funame = 'data_array.mat'
+sio.savemat(funame, mdict={'data': vdata}, do_compression=True)
+print("Data saved as " + funame)
 
 if __debug__:
     print("Channel name is " + data[0].channel.name)

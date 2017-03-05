@@ -42,20 +42,24 @@
 
 Each column row is a time point, with 12 features corresponding to the following 12 channels:
 ```
-C1:PEM-RMS_BS_X_0p03_0p1  
-C1:PEM-RMS_BS_X_0p1_0p3  
-C1:PEM-RMS_BS_X_0p3_1  
-C1:PEM-RMS_BS_X_10_30  
-C1:PEM-RMS_BS_X_1_3  
-C1:PEM-RMS_BS_X_3_10  
-C1:PEM-RMS_BS_Y_0p03_0p1  
-C1:PEM-RMS_BS_Y_0p1_0p3  
-C1:PEM-RMS_BS_Y_0p3_1  
-C1:PEM-RMS_BS_Y_10_30  
-C1:PEM-RMS_BS_Y_1_3  
-C1:PEM-RMS_BS_Y_3_10   
-C1:PEM-RMS_BS_Z_0p03_0p1  
+C1:PEM-RMS_BS_X_0p03_0p1
+C1:PEM-RMS_BS_X_0p1_0p3
+C1:PEM-RMS_BS_X_0p3_1
+C1:PEM-RMS_BS_X_10_30
+C1:PEM-RMS_BS_X_1_3
+C1:PEM-RMS_BS_X_3_10
+C1:PEM-RMS_BS_Y_0p03_0p1
+C1:PEM-RMS_BS_Y_0p1_0p3
+C1:PEM-RMS_BS_Y_0p3_1
+C1:PEM-RMS_BS_Y_10_30
+C1:PEM-RMS_BS_Y_1_3
+C1:PEM-RMS_BS_Y_3_10
+C1:PEM-RMS_BS_Z_0p03_0p1
 C1:PEM-RMS_BS_Z_0p1_0p3
+C1:PEM-RMS_BS_Z_0p3_1
+C1:PEM-RMS_BS_Z_10_30
+C1:PEM-RMS_BS_Z_1_3
+C1:PEM-RMS_BS_Z_3_10
 ```
 (basically, X and Y direction readings across all the frequency bands)
 The Python script to access and compile data into this format can be found as 'getData.py'. 

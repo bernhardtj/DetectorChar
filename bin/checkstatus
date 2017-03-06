@@ -97,7 +97,7 @@ if manualstatus == 0:
     cmd = subprocess.Popen('condor_q | grep %s' % USER, shell=True,
                            stdout=subprocess.PIPE)
     for line in cmd.stdout:
-        if "gw_daily_summary" in line:
+        if "gw_daily" in line:
             if line.split()[5] != 'H':
                 codestatus = 0
                 if VERBOSE:

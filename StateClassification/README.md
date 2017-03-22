@@ -64,6 +64,9 @@ C1:PEM-RMS_BS_Z_3_10
 (basically, X and Y direction readings across all the frequency bands)
 The Python script to access and compile data into this format can be found as 'getData.py'. 
 
+### Optimizing Number of Clusters in K-Means
+Plot the mean distance to a centroid as a function of k - the number of clusters - and use the "elbow point" to estimate the optimal number of clusters, as shown in https://www.datascience.com/blog/introduction-to-k-means-clustering-algorithm-learn-data-science-tutorials
+
 
 ### Classification Possibilities
 <p> Experiment in Matlab with: </p>

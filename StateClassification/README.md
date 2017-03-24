@@ -87,7 +87,9 @@ for channel in channels[1:]:
 ```
 
 SIDE NOTE: GWpy install had a number of issues. Make sure whoever is trying to install it goes to the latest install docs https://gwpy.github.io/docs/latest/install.html because the dependencies have changed. I also had to add the package location to my Jupyter Notebook path: 
-```sys.path.append('/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
+```
+sys.path.append('/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
+
 ```
 After that, I got some sort of relative import error, but uninstalling and reinstalling gwpy through pip seems to have solved it for now. 
 

@@ -383,7 +383,8 @@ update_40m_config() {
     [ -z $target ] && local target=${_SUMMARY_CONFIG}/${ifo}
     local _user="controls"
     local _host="nodus.ligo.caltech.edu"
-    local _path="/cvs/cds/caltech/chans/GWsummaries"
+    #local _path="/cvs/cds/caltech/chans/GWsummaries"
+    local _path="/users/public_html/detcharsummary/ConfigFiles"
 
     # pull from nodus if we can
     mkdir -p $target

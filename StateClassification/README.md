@@ -64,13 +64,50 @@ C1:PEM-RMS_BS_Z_3_10
 (basically, X and Y direction readings across all the frequency bands)
 The Python script to access and compile data into this format can be found as 'getData.py'. 
 
+### GWpy
+The getData.py script encounters issues for getting data over ~ 5 hours, resulting in the error 'Requested data could not be found'. After trying a number of ways of interacting with nds2, I could not resolve the issue. Nds2 also allows you to set parameters for your connection, including a GAP_HANDLER to deal with missing data. This looked quite promising, but in my code, I was not able to access this method on the connection object. 
+I turned to GWPy for some help with this. GWPy has a TimeSeries module for accessing data from LIGO channels:
+ 
+```
+lho = TimeSeries.fetch(channel, 1174003218, 1174089618, 0,'nds40.ligo.caltech.edu', 31200, verbose=True)
+
+```
+However, the same error showed up when I tried to access 24-hour data (I guess it should be no surprise since this was an nds2 error). I found a similar issue posted on the gwpy Github:
+```
+When using the --nds option, if data are missing gw_summary will return a RuntimeError: Requested data were not found error and crash rather than padding with zeros or producing an empty plot.
+```
+TimeSeries.get has an argument called "pad" for a value to fill gaps in the data with, the default for which is 'don't fill gaps'. Right now, I'm trying to use this method with the pad argument. Using TimeSeries.get as is asks for LIGO access credentials however, but this method can take in keyword arguments to pass into TimeSeries.fetch, so this is currently what I'm trying:
+
+```
+first_channel = TimeSeries.fetch(channels[0], 1174003218, 1174006818, 0, host='nds40.ligo.caltech.edu', port=31200)
+data_array = np.transpose(np.matrix(first_channel))
+for channel in channels[1:]:
+    lho = TimeSeries.get(channel, 1174003218, 1174089618, 0, host='nds40.ligo.caltech.edu', port=31200, verbose=True)
+    data_array = np.hstack((data_array, np.transpose(np.matrix(lho))))
+```
+
+SIDE NOTE: GWpy install had a number of issues. Make sure whoever is trying to install it goes to the latest install docs https://gwpy.github.io/docs/latest/install.html because the dependencies have changed. I also had to add the package location to my Jupyter Notebook path: 
+```
+sys.path.append('/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages')
+
+```
+After that, I got some sort of relative import error, but uninstalling and reinstalling gwpy through pip seems to have solved it for now. 
+
+### K-Means Clustering
+I chose k-means clustering because it seemed to fit what we were looking for. The MATLAB code for creating classifying through k-means and generating plots for these classifications can be found as clusterPlotting.m
+The classification needs to be modified by finding the optimal number of clusters(see below) and the model needs to be evaluated somehow. 
+
+
+### Optimizing Number of Clusters in K-Means
+Plot the mean distance to a centroid as a function of k - the number of clusters - and use the "elbow point" to estimate the optimal number of clusters, as shown in https://www.datascience.com/blog/introduction-to-k-means-clustering-algorithm-learn-data-science-tutorials
+
+### Evaluation
+
 
 ### Classification Possibilities
 <p> Experiment in Matlab with: </p>
 <ol>
 <li><em>Self-organizing map - unsupervised neural network to find clusters within dataset</em></li>
-
-<li><em>Competitive learning/layers</em></li>
 <li><em>k-means clustering</em></li>
 </ol>
 

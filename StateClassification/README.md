@@ -7,6 +7,7 @@
 1. What is the seismic state? (e.g. EQ, truck, windy, broken sensor)
 1. Are the optical levers going bad? (e.g. look at the noise at 1 Hz vs. the noise at 50 Hz)
 1. Do we want to use Clustering or Classification? (probably clustering because of [Star Wars](http://stackoverflow.com/questions/5064928/difference-between-classification-and-clustering-in-data-mining))
+1. In The End, after we have clustering results, we would like to go through and label all of the clusters so that this can form the basis of future analyses where we just do Classification into these previously discovered CLusters.
 
 
 
@@ -110,6 +111,11 @@ Plot the mean distance to a centroid as a function of k - the number of clusters
 <li><em>Self-organizing map - unsupervised neural network to find clusters within dataset</em></li>
 <li><em>k-means clustering</em></li>
 </ol>
+------
+## Visualization of Clustering
+1. http://www.dummies.com/programming/big-data/data-science/how-to-visualize-the-clusters-in-a-k-means-unsupervised-learning-model/
+
+
 ------
 
 ![ML Cheat Sheet](microsoft-machine-learning-algorithm-cheat-sheet-v6.png?raw=true "Title")

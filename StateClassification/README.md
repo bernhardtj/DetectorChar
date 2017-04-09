@@ -116,8 +116,7 @@ Plot the mean distance to a centroid as a function of k - the number of clusters
 ## Visualization of Clustering
 
 1. http://www.dummies.com/programming/big-data/data-science/how-to-visualize-the-clusters-in-a-k-means-unsupervised-learning-model/
-
-
+1. http://www.informationisbeautiful.net/
 ------
 
 ![ML Cheat Sheet](microsoft-machine-learning-algorithm-cheat-sheet-v6.png?raw=true "Title")

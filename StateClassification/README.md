@@ -7,7 +7,7 @@
 1. What is the seismic state? (e.g. EQ, truck, windy, broken sensor)
 1. Are the optical levers going bad? (e.g. look at the noise at 1 Hz vs. the noise at 50 Hz)
 
-![ML Cheat Sheet](microsoft-machine-learning-algorithm-cheat-sheet-v6.png?raw=true "Title")
+
 
 
 ### Classification Papers/Algorithms
@@ -110,6 +110,7 @@ Plot the mean distance to a centroid as a function of k - the number of clusters
 <li><em>Self-organizing map - unsupervised neural network to find clusters within dataset</em></li>
 <li><em>k-means clustering</em></li>
 </ol>
-
+------
+![ML Cheat Sheet](microsoft-machine-learning-algorithm-cheat-sheet-v6.png?raw=true "Title")
 ------
 [Markdown Synax - GitHub flavor](https://help.github.com/articles/basic-writing-and-formatting-syntax/)

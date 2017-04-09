@@ -111,6 +111,8 @@ Plot the mean distance to a centroid as a function of k - the number of clusters
 <li><em>k-means clustering</em></li>
 </ol>
 ------
+
 ![ML Cheat Sheet](microsoft-machine-learning-algorithm-cheat-sheet-v6.png?raw=true "Title")
+
 ------
 [Markdown Synax - GitHub flavor](https://help.github.com/articles/basic-writing-and-formatting-syntax/)

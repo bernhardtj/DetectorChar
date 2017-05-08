@@ -13,7 +13,7 @@ echo "-- Welcome to the gw_summary DAG generator -------------------------------
 
 # get basic environment
 DIR=$( cd "$( dirname $(readlink -f "${BASH_SOURCE[0]}" ) )" && pwd )
-. ~/.bash_profile
+source /home/detchar/opt/gwpysoft-2.7/bin/activate
 echo -n "Profile set, "
 . $DIR/functions
 echo "environment set, let's go."
@@ -40,8 +40,9 @@ echo "Environment set"
 
 # -- update config files -------------------
 update_40m_config
-update_40m_medm
 echo "Pulled from 40m"
+update_40m_medm
+echo "Updated MEDM screens"
 
 # -- set kerberos environment -------------------
 klist -s &>/dev/null || get_robot_kerberos_ticket

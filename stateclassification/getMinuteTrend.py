@@ -20,11 +20,11 @@ import nds2
 ifo = 'L1'
 
 # Setup connection to the NDS
-if ifo == 'H1':
+if   ifo == 'H1':
     ndsServer  = 'nds.ligo-wa.caltech.edu'
-elif ifo =='L1':
-    ndsServer  = 'nds.ligo.caltech.edu'
-elif ifo =='C1':
+elif ifo == 'L1':
+    ndsServer  = 'nds.ligo-la.caltech.edu'
+elif ifo == 'C1':
     ndsServer  = 'nds40.ligo.caltech.edu'
 
 
@@ -32,23 +32,23 @@ portNumber = 31200
 conn       = nds2.connection(ndsServer, portNumber)
 
 # Setup start and stop times
-times = '2017-03-01 00:00:00'
-t = Time(times, format='iso', scale='utc')
+times   = '2017-03-01 00:00:00'
+t       = Time(times, format='iso', scale='utc')
 #t_start = int(t.gps)
 # round start time to multiple of 60 for minute trend
 t_start = int(np.floor(t.gps/60)*60)
 
-dur_in_days = 30
+dur_in_days    = 30
 dur_in_minutes = dur_in_days * 24 * 60
-dur = dur_in_minutes * 60    # must be a multiple of 60
+dur            = dur_in_minutes * 60    # must be a multiple of 60
 
 
 # ## Build up the channel list and Get the Data
 chan_head = ifo + ':' + 'ISI-' + 'GND_STS' + '_'
-sensors = {'HAM2'}
-dofs = {'X', 'Y', 'Z'}
-bands = {'30M_100M', '100M_300M', '300M_1', '1_3', '3_10', '10_30'}
-channels = []
+sensors   = {'ITMY'}
+dofs      = {'X', 'Y', 'Z'}
+bands     = {'30M_100M', '100M_300M', '300M_1', '1_3', '3_10', '10_30'}
+channels  = []
 # why is the channel ordering so weird? 
 # need to use sorted to preserve the intended ordering
 for sensor in sorted(sensors):
@@ -59,26 +59,29 @@ for sensor in sorted(sensors):
             channels.append(channel)
 
 print("Getting data from " + ndsServer + "...")
-tic = timer()
+tic  = timer()
 data = conn.fetch(t_start, t_start + dur, channels)
-toc = timer()
+toc  = timer()
 print(str(toc - tic) + " seconds elapsed.")
 
 if __debug__:
     for i in channels:
         print(i)
 
-# ## save the data so that it can be loaded by matlab or python
-# #### savemat will compress the data and save it in hdf5 format
+# save the data so that it can be loaded by matlab or python
+# savemat will compress the data and save it in hdf5 format
 vdata = []
-# get the data and stack it into a single matrix where the data are the columns
+# get the data and stack it into a single matrix
+# where the data are the columns
 for k in range(len(channels)):
     vdata.append(data[k].data)
 
 
-# save to a hdf5 format that matlab can read (why is compression off by default?)
-funame = ifo + '_SeismicBLRMS.mat'
-sio.savemat(funame, mdict={'data': vdata}, do_compression=True)
+# save to a hdf5 format that matlab can read
+# (why is compression off by default?)
+funame = 'Data/' + ifo + '_SeismicBLRMS.mat'
+sio.savemat(funame, mdict={'data': vdata, 'chans': channels},
+                do_compression=True)
 print("Data saved as " + funame)
 
 # ### some debugging info about the channels

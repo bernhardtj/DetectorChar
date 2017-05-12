@@ -11,19 +11,22 @@ from timeit import default_timer as timer
 #import scipy.signal as sig
 #import scipy.constants as const
 from astropy.time import Time
-#import sys
+import sys
 #sys.path.append('/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7')
 import nds2
 
+# input argument Parsing
+if isinstance(sys.argv[1], str):
+    ifo = sys.argv[1]
+else:
+    ifo = 'L1'
 
 # ## setup the servers, start times, and duration
-ifo = 'L1'
-
 # Setup connection to the NDS
 if   ifo == 'H1':
     ndsServer  = 'nds.ligo-wa.caltech.edu'
 elif ifo == 'L1':
-    ndsServer  = 'nds.ligo-la.caltech.edu'
+    ndsServer  = 'nds.ligo.caltech.edu'
 elif ifo == 'C1':
     ndsServer  = 'nds40.ligo.caltech.edu'
 
@@ -45,15 +48,15 @@ dur            = dur_in_minutes * 60    # must be a multiple of 60
 
 # ## Build up the channel list and Get the Data
 chan_head = ifo + ':' + 'ISI-' + 'GND_STS' + '_'
-sensors   = {'ITMY'}
-dofs      = {'X', 'Y', 'Z'}
-bands     = {'30M_100M', '100M_300M', '300M_1', '1_3', '3_10', '10_30'}
+sensors   = ['ITMY']
+dofs      = ['X', 'Y', 'Z']
+bands     = ['30M_100M', '100M_300M', '300M_1', '1_3', '3_10', '10_30']
 channels  = []
 # why is the channel ordering so weird? 
 # need to use sorted to preserve the intended ordering
-for sensor in sorted(sensors):
-    for dof in sorted(dofs):
-        for band in sorted(bands):
+for sensor in sensors:
+    for dof in dofs:
+        for band in bands:
             channel = chan_head + sensor + '_' + dof + '_BLRMS_' + band + '.mean, m-trend'
             #print channel
             channels.append(channel)
@@ -62,7 +65,7 @@ print("Getting data from " + ndsServer + "...")
 tic  = timer()
 data = conn.fetch(t_start, t_start + dur, channels)
 toc  = timer()
-print(str(toc - tic) + " seconds elapsed.")
+print(str(round(toc - tic, 2)) + " seconds elapsed.")
 
 if __debug__:
     for i in channels:

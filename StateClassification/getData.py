@@ -1,5 +1,6 @@
 # this function gets some data (from the 40m) and saves it as
 # a .mat file for the matlabs
+# Ex. python -O getData.py
 
 from __future__ import division
 import numpy as np

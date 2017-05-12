@@ -14,7 +14,9 @@ data = blrms.data(zidx,:).';
 %data = data.data(:, 1:12);
 
 % k cluster kmeans
+tic
 [idx, C] = kmeans(data, k);
+display([num2str(toc) ' s to do the clustering.'])
 
 %% generate time column for plotting 
 % this code doesn't handle spans of missing data well
@@ -32,9 +34,10 @@ c = distinguishable_colors(k);
 
 
 for sensor = 2
-    close(200 + sensor)
+    %close(200 + sensor)
+    clf
     figure(200 + sensor)
-    [ha,pos] = tight_subplot(6, 1, 0, [0.1 0.031], [0.12 0.03]);
+    [ha,pos] = tight_subplot(6, 1, 0, [0.1 0.031], [0.06 0.03]);
     for v = 1:6
       axes(ha(v));
       for clust = 1:k
@@ -45,13 +48,16 @@ for sensor = 2
       end
     set(gca,'YScale','log')
     set(gca,'XTick',[])
-    bott = min(data(:,chan));
-    bott = max(bott, 30);
-    ylim([0.9*bott 100*bott])
-    axis tight
+    pp = find(data(:,chan));   % find non-zero elements
+    bott = min(data(pp,chan))   % find min of all non-zero elements
+    bott = max(bott, 3);      % bottom of scale can't be less than ...
+    ylim([0.9*bott 110*bott])
+    %axis tight
     legg = legend(channels(chan,:), 'Location', 'NorthWest');
     set(legg,'Interpreter','none');
-    set(legg,'FontSize',10)
+    set(legg,'FontSize',10);
+    g = floor(log10(bott));
+    set(gca, 'YTick', 10.^([g g+1 g+2]))
     %title(strcat('Cluster Assignments for Channel', ' ', channels(channel, 1)))
     %savefig(strcat(working_dir,'/clusterPlots/channel', num2str(channel - 1), 'clusters.fig'))
     end
@@ -62,9 +68,10 @@ for sensor = 2
     %set(legg,'Interpreter','none');
     hold off
 end
-pause(3)
-set(gcf,'Position', [400 0 700 1200])
-        
+tic
+pause(1.5)
+set(gcf,'Position', [0 0 1900 1200])
+hh = text(-1.3, 5000000, 'RMS Velocity [um/s]','Interpreter','Latex','rotation',90);
 %% pretty print
 
 
@@ -74,11 +81,10 @@ set(gcf,'PaperPositionMode','auto')
 fname = 'BLRMS_clusters';
 rez = ['-r' num2str(300)];
 %print('-depsc', rez, [fname '.eps'])
-print('-dpng','-r100',[fname '.png'])
+print('-dpng','-r100',['Figures/' fname '.png'])
 %[a,~] = system(['makePDF.sh ' fname '.eps']);
 %if a == 0
 %    system(['rm ' fname '.eps']);
 %end
-        
-    
+toc
 

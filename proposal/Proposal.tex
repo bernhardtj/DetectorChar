@@ -23,7 +23,7 @@
 \begin{document}
 
 \section{Introduction} 
-\par The data obained from LIGO has noise that comes from many sources. In order to be be able to better distinguish a signal from the noise is it is important to characterize the type of noise observed. In order to sort data two types of approaches are used: classification and clustering. Classification algorithms search the data and sort the data into already defined categories. Clustering algorithms look for relationshipswithin the data to create categories into which the data is sorted. Classification algorithms are part of supervised learning since the computer determines the structure of the data from data that is already provided. Clustering algorithms are part of unsupervised learning since the computer determines the structure of the data without any previous information.  Clustering algorithms can be used to characterize the noise by identifying common characteristics within the noise depending on its sources. Clustering algortithms can further help with classification. 
+\par The data obained from LIGO has noise that comes from many sources. In order to be be able to better distinguish a signal from the noise is it is important to characterize the type of noise observed. Neural networks can be used to characterize the noise.
 
 \par Neural networks can be used to find relationships between the inputed data using hidden layers of connections within the data. A diagram of a neural network is shown in Figure \ref{fig:image1}.
 
@@ -31,19 +31,39 @@
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=6in]{neuralnetwork.png}
-\caption{Diagram of Neural Network}
+\includegraphics[width=5in]{neuralnetwork.png}
+\caption{Diagram of Neural Network (from \url{http://neuralnetworksanddeeplearning.com/chap1.html})}
 \label{fig:image1}
 \end{center}
 \end{figure}    
 
 \begin{figure}[htbp]
 \begin{center}
-\includegraphics[width=6in]{ltsm.png}
-\caption{Diagram of LTSM}
+\includegraphics[width=5in]{ltsm.png}
+\caption{Diagram of LTSM (from \url{http://colah.github.io/posts/2015-08-Understanding-LSTMs)}}
 \label{fig:image2}
 \end{center}
 \end{figure}   
+
+\section{Classification vs. Clustering}
+
+In order to sort data two types of approaches are used: classification and clustering. Classification algorithms search the data and sort the data into already defined categories. Clustering algorithms look for relationships within the data to create categories into which the data is sorted. Classification algorithms are part of supervised learning since the computer determines the structure of the data from data that is already provided. Clustering algorithms are part of unsupervised learning since the computer determines the structure of the data without any previous information.  Clustering algorithms can be used to characterize the noise by identifying common characteristics within the noise depending on its sources. Clustering algortithms can further help with classification. A summary of the differences between classification and clusteirng is shown in the table below.
+
+\begin{center}
+ \begin{tabular}{|c | c|} 
+ \hline
+ Classification & Clustering\\ [0.5ex] 
+ \hline\hline
+ Supervised Learning & Unsupervised Learning\\ 
+ \hline
+ Classes are known & Classes are unknown\\
+ \hline
+ Used to classify data & Used to find relationships within data\\
+ \hline
+\end{tabular}
+\end{center}
+
+\par An example of  a clustering visualization code can be found at \url{https://www.mathworks.com/help/stats/visualize-high-dimensional-data-using-t-sne.html}.
 
 \section{Objectives}  
 The interferometer's gravitational wave signal output is a time series. We will see whether to analyze the raw time series data or the 

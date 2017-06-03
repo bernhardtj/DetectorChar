@@ -1,6 +1,6 @@
 from sklearn.cluster import KMeans
 import numpy as np
-import scipy.io
+from scipy.io import loadmat
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -14,11 +14,11 @@ plt.rc('axes.formatter', limits=[-3,4])
 plt.rc('legend', fontsize=14.0)
 plt.rc('xtick', labelsize=16.0)
 plt.rc('ytick', labelsize=16.0)
-plt.rc('figure', dpi=300)
+plt.rc('figure', dpi=100)
 
-H1dat = scipy.io.loadmat('H1_SeismicBLRMS_March.mat')
-vdat = H1dat['data'][-6:]
-vchans = H1dat['chans'][-6:]
+H1dat      = loadmat('Data/' + 'H1_SeismicBLRMS_March.mat')
+vdat       = H1dat['data'][-6:]
+vchans     = H1dat['chans'][-6:]
 timetuples = vdat.T
 
 cl = 6
@@ -40,9 +40,9 @@ for ax, data, chan in zip(axes, vdat, vchans):
     ax.legend()
 fig.tight_layout()
 try:
-    fig.savefig('sei-test3.png')
+    fig.savefig('Figures/' + 'sei-test3.png')
 except RuntimeError as e:
     if 'latex' in str(e).lower():
-        fig.savefig('sei-test3.png')
+        fig.savefig('Figures/' + 'sei-test3.png')
     else:
         raise

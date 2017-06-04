@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+from __future__ import division
 from sklearn.cluster import KMeans
 import numpy as np
 from scipy.io import loadmat

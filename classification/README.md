@@ -84,6 +84,9 @@ Plot the mean distance to a centroid as a function of k - the number of clusters
 <li><em>Self-organizing map - unsupervised neural network to find clusters within dataset</em></li>
 <li><em>k-means clustering</em></li>
 </ol>
+
+## Clustering in python:
+1. http://scikit-learn.org/stable/modules/clustering.html
 ------
 
 ## Visualization of Clustering

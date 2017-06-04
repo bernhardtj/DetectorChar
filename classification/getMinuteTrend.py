@@ -48,7 +48,7 @@ dur            = dur_in_minutes * 60    # must be a multiple of 60
 
 # ## Build up the channel list and Get the Data
 chan_head = ifo + ':' + 'ISI-' + 'GND_STS' + '_'
-sensors   = ['ITMY']
+sensors   = ['ETMX', 'ETMY', 'ITMY']
 dofs      = ['X', 'Y', 'Z']
 bands     = ['30M_100M', '100M_300M', '300M_1', '1_3', '3_10', '10_30']
 channels  = []
@@ -58,7 +58,6 @@ for sensor in sensors:
     for dof in dofs:
         for band in bands:
             channel = chan_head + sensor + '_' + dof + '_BLRMS_' + band + '.mean, m-trend'
-            #print channel
             channels.append(channel)
 
 print("Getting data from " + ndsServer + "...")
@@ -83,13 +82,13 @@ for k in range(len(channels)):
 # save to a hdf5 format that matlab can read
 # (why is compression off by default?)
 funame = 'Data/' + ifo + '_SeismicBLRMS.mat'
-sio.savemat(funame, mdict={'data': vdata, 'chans': channels},
+sio.savemat(funame, mdict={'data': vdata, 'chans': channels, 't_start': t_start},
                 do_compression=True)
 print("Data saved as " + funame)
 
 # ### some debugging info about the channels
 if __debug__:
-    print("Channel name is " + data[0].channel.name)
-    print("Sample rate is " + str(data[0].channel.sample_rate) + " Hz")
+    print("Channel name is "      + data[0].channel.name)
+    print("Sample rate is "       + str(data[0].channel.sample_rate) + " Hz")
     print("Number of samples is " + str(data[0].length))
-    print("GPS Start time is " + str(data[0].gps_seconds))
+    print("GPS Start time is "    + str(data[0].gps_seconds))

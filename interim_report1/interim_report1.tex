@@ -10,6 +10,8 @@
 \usepackage{fancyhdr}
 \usepackage{subfigure}
 \usepackage{hyperref}
+\usepackage{mathtools}
+
 \ligodccnumber{T}{17}{00198}{}{v1}% \ligodistribution{AIC, ISC}
 
 \setlength\parindent{24pt}
@@ -36,7 +38,29 @@
 
 \indent
 
-\par The aim of this project is to characterize different sources of noise from LIGO using machine learning algorithms. First I  will test clustering algorithms on seismic data, and then implement a neural network to sort through the seismic noise data, as well as other noise data.        
+\par The aim of this project is to characterize different sources of noise from LIGO using machine learning algorithms. First I  will test clustering algorithms on seismic data, and then implement a neural network to sort through the seismic noise data, as well as other noise data.
+
+\section{Clustering Algorithms}
+
+\subsection{K-means clustering}
+
+\indent
+
+\par The k-means clustering algorithm creates clusters by separating data points into k number of groups. The value of k is inputted into the algorithm. The clusters are determined by minimizing the inertia, or the within-cluster sum-of-squares. The inertia is a measure of how coherent the clusters are. By minimizing the intertia, the algorithm tries to minimize the difference between the mean value of a cluster and the values of points in the cluster. If a set of n samples x are inputted, the algorithm divides the samples into k clusters C. Each cluster is described by its mean \(u_j\), or centroid. The interia of a cluster is caluclated by the following expression:
+
+\[\sum_{i=0}^{n} \min_{\mu_j \in  C}(\|x_j-\mu_i\|^2)\]
+
+\par The inertia is not normalized, but lower values are better and zero is the optimum value. The inertia assumes that the clusters are convex and isotropic, and would not work well to cluster irregular or elongated clusters. \cite{Citation2} 
+
+\subsection{DBSCAN clustering}
+
+\indent
+
+\par The DBSCAN clustering algorithm creates clusters out of areas in the data of higher density. Unlike kmeans, it does not consider clusters to have any particular shapes, and the algorithm determines the number of clusters based on inputted parameters. Core samples are points that are in areas of high densities. The algorithm creates clusters around core samples so that the clusters consist of core samples, and non-core samples that are close to the core samples. The core samples are determined by two input parameters, the minimum samples and a specified distance, $\varepsilon$. A point is in the $\varepsilon$-neighborhood if the distance d from a point p to a point q is within a radius of of $\varepsilon$, as determined below: 
+
+\[N_\varepsilon(p):\{q|d(p,q) \leq \varepsilon\}\]
+
+\par High density areas have the minimum sample of values within the $\varepsilon$-neighborhood. By increasing the number of minimum samples, and decreasing the distance, $\varepsilon$, a cluster's density is increased. \cite{Citation2}\cite{Citation3}
 
 \section{Current Progress}
 
@@ -76,7 +100,10 @@
 	 O'Reilly Media Inc., (2017).    
       
        \bibitem{Citation2}
-       \url{http://scikit-learn.org/stable/modules/clustering.html}
+         \url{http://scikit-learn.org/stable/modules/clustering.html}
+
+       \bibitem{Citation3}
+         \url{https://www.cse.buffalo.edu/~jing/cse601/fa12/materials/clustering_density.pdf}
  
 \end{thebibliography}
 

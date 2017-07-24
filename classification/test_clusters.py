@@ -34,7 +34,7 @@ plt.rc('figure', dpi=100)
 colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
 cl= 6 #number of clusters for kmeans
 cl2 = 4 #number of clusters for agglomerative clustering
-cl3 = 5 #number of clusters for 
+cl3 = 5 #number of clusters for birch 
 eps = 2 #min distance for density for dbscan
 min_samples=15 #min samples for dbscan
 
@@ -123,10 +123,10 @@ fig.savefig('Figures/EQs_all_indicated')
 #clustering
 kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #kmeans clustering of earthquake channels
 db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3) #dbscan clustering of earthquake channels
-ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
+#ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
 
 #other clustering algorithms
-#birch = Birch(n_clusters=cl3).fit(timetuples)
+birch = Birch(n_clusters=cl3).fit(timetuples3)
 #af = AffinityPropagation(preference=preference).fit(timetuples)
 #bandwidth = estimate_bandwidth(timetuples, quantile=0.2, n_samples=100)
 #ms = MeanShift(bandwidth=bandwidth,bin_seeding=True)
@@ -151,32 +151,37 @@ for i in etime_march:
 kclusters = np.array([])
 dbclusters = np.array([])
 agclusters = np.array([])
+bclusters = np.array([])
 for i in range(len(a)):
     val = int(a[i])
-    kcluster = kmeans.labels_[val]
-    kclusters = np.append(kclusters,kcluster)
-    dbcluster  = db.labels_[val]
-    dbclusters = np.append(dbclusters,dbcluster)
-    agcluster = ag.labels_[val]
-    agclusters = np.append(agclusters,agcluster)
+    kpoint = kmeans.labels_[val]
+    kclusters = np.append(kclusters,kpoint)
+    dbpoint  = db.labels_[val]
+    dbclusters = np.append(dbclusters,dbpoint)
+    agpoint = ag.labels_[val]
+    agclusters = np.append(agclusters,agpoint)
+    bpoint= birch.labels_[val]
+    bclusters = np.append(bclusters, bpoint)
 '''
 #add up number of clusters that appear next to each earthquake
 kclusters = np.array([])
 dbclusters = np.array([])
 agclusters = np.array([])
+bclusters = np.array([])
 for t in etime_march:
     tmin = int(t-5*60)
     tmax = int(t+5*60)
     for j  in range(tmin,tmax):
         val = abs(xvals-j)
         aval = np.argmin(val)
-        kcluster = kmeans.labels_[aval]
-        kclusters = np.append(kclusters,kcluster)
-        dbcluster  = db.labels_[aval]
-        dbclusters = np.append(dbclusters,dbcluster)
-        agcluster = ag.labels_[aval]
-        agclusters = np.append(agclusters,agcluster)
-
+        kpoint = kmeans.labels_[aval]
+        kclusters = np.append(kclusters,kpoint)
+        dbpoint  = db.labels_[aval]
+        dbclusters = np.append(dbclusters,dbpoint)
+        #agpoint = ag.labels_[aval]
+        #agclusters = np.append(agclusters,agpoint)
+        bpoint = birch.labels_[aval]
+        bclusters = np.append(bclusters, bpoint)
 #histogram of clusters (commented out)                                                                                                                            
 
 '''fig = plt.figure()
@@ -206,12 +211,20 @@ db_score = db_max/len(dbclusters)
 print('dbscore is ' + str(db_score))
 
 #agglomerative clustering score determined by percent of points sorted into one cluster near EQ
-print(collections.Counter(agclusters))
+'''print(collections.Counter(agclusters))
 ag_count = collections.Counter(agclusters).most_common(1)
 ag_list = [x[1] for x in ag_count]
 ag_max = ag_list[0]
 ag_score = ag_max/len(agclusters)
-print('agscore is ' + str(ag_score))
+print('agscore is ' + str(ag_score))'''
+
+#birch clustering score determined by percent of points into one cluster near EQ
+print(collections.Counter(bclusters))
+b_count = collections.Counter(bclusters).most_common(1)
+b_list = [x[1] for x in b_count]
+b_max = b_list[0]
+b_score = b_max/len(bclusters)
+print('bscore is ' + str(b_score))
 
 #plot graph of kmeans clustering for EQ
 xvals = np.arange(t_start,t_end,60)
@@ -247,7 +260,7 @@ fig.tight_layout()
 fig.savefig('Figures/dbscan_all.png')
 
 #plot agglomerative clustering graph for EQ
-fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
+'''fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data,c=colors[ag.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
@@ -260,21 +273,20 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
 #fig.savefig('/home/roxana.popescu/public_html/'+'EQ_agclustering_'+str(cl2)+'.png')
-fig.savefig('Figures/EQ_agclustering_'+str(cl2)+'.png')
+fig.savefig('Figures/EQ_agclustering_'+str(cl2)+'.png')'''
 
-'''
-#plot birch  clustering graph for EQ+microseism
-fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
-for ax, data, chan in zip(axes, vdat, vchans):
+#plot birch  clustering graph for EQ
+fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
+for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data,c=colors[birch.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
     ax.set_yscale('log')
     ax.set_ylim(np.median(data)*0.1, max(data)*1.1)
-    ax.set_xlim(0,30)
     ax.set_xlabel('Time [days]')
     ax.grid(True, which='both')
     ax.legend()
+    for e in range(len(etime_march)):
+        ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html','EQ+microseism_birchclustering_'+str(cl3)+'.png')
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_birchclustering_'+str(cl3)+'.png')
 fig.savefig('Figures/EQ+microseism_birchclustering_'+str(cl3)+'.png')
-'''

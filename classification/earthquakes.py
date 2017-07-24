@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
-import os
 import scipy.signal
 
 plt.rc('text', usetex=True)
@@ -22,13 +21,15 @@ plt.rc('ytick', labelsize=16.0)
 plt.rc('figure', dpi=100)
 
 #variables
-w = 49
-p = 1
-cl = 4
+w = 49 #window length for savgol filter
+p = 1 #polynomial order for savgol filter
+cl = 4 #number of clusters
+colors = np.array(['r', 'g', 'b', 'y']) #colors to assign to each cluster
 
+#read in data
 H1dat = loadmat('Data/' + 'H1_SeismicBLRMS_March.mat')
 
-#earthquake channels
+#read in all earthquake data/channels into vdat/vchans
 cols = [6,12]
 vdat = np.array(H1dat['data'][0])
 for i in cols:
@@ -38,27 +39,29 @@ vchans = np.array(H1dat['chans'][0])
 for i in cols:
     vchans = np.append(vchans,H1dat['chans'][i])
 
+#apply smoothing filter to data
 vdat_smth = scipy.signal.savgol_filter(vdat,w,p)
+#take derivative of smoothed data
 vdat_diff = np.diff(vdat_smth)
+#transpose vdat_diff
 timetuples = vdat_diff.T
 
-#add diff data and original data together
+#add original data and deriv data together into vdat/vchans_both
 vdat_diff2 = np.hstack((vdat_diff,[[0],[0],[0]]))
 vboth = np.vstack((vdat,vdat_diff2))
-vchans2 = np.append(vchans,vchans)
+vchans_both = np.append(vchans,vchans)
 timetuples2 = vboth.T
 
-#square derivatives
+#take the square of the derivatives as vdat_diff3/vchans
 vdat_diff3 = np.square(vdat_diff)
 timetuples3 = vdat_diff3.T
 
-#clustering
-colors = np.array(['r', 'g', 'b', 'y'])
-kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples)
-kmeans2 = KMeans(n_clusters=cl, random_state=12).fit(timetuples2)
-kmeans3 = KMeans(n_clusters=cl, random_state=12).fit(timetuples3)
+#kmeans clustering of the data 
+kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples) #cluster according to derivatives
+kmeans2 = KMeans(n_clusters=cl, random_state=12).fit(timetuples2) #cluster according to both original data and derivatives
+kmeans3 = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #cluster according to square of derivatives
 
-#plot of original values that are clustered according to derivatives
+#plot of original values (and smoothed data) that are clustered according to derivatives
 xvals = (np.arange(len(vdat[0])))/(60.*24.)
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
@@ -72,7 +75,8 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_deriv.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv.png')
+fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_deriv.png')
 
 #plot of derivatives that are clustered according to derivatives 
 xvals = (np.arange(len(vdat_diff[0])))/(60.*24.)
@@ -87,9 +91,10 @@ for ax, data, chan in zip(axes, vdat_diff, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_deriv_deriv.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv_deriv.png')
+fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_deriv_data.png')
 
-#plot of original values that are clustered according to both
+#plot of original values (and smoothed data) that are clustered according to original data and derivatives
 xvals = (np.arange(len(vdat[0])))/(60.*24.)
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
@@ -103,7 +108,8 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_data+deriv.png'))
+#fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_data+deriv.png')
+fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_data+deriv.png')
 
 #plot of square of derivatives that are clustered according to square of derivatives
 xvals = (np.arange(len(vdat_diff3[0])))/(60.*24.)
@@ -118,9 +124,10 @@ for ax, data, chan in zip(axes, vdat_diff3, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_deriv2_deriv2.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv2_deriv2.png')
+fig.savefig('Figures/EQ_XYZ_' + str(cl) + 'deriv2_deriv2.png')
 
-#plot of original values that are clustered according to square of derivatives
+#plot of original values (and smoothed data) that are clustered according to square of derivatives
 xvals = (np.arange(len(vdat[0])))/(60.*24.)
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
@@ -134,4 +141,4 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_deriv2.png'))
+fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv2.png')

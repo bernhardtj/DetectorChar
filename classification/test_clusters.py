@@ -16,7 +16,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
-import os
 import scipy.signal
 from astropy.time import Time
 import collections
@@ -32,19 +31,18 @@ plt.rc('ytick', labelsize=16.0)
 plt.rc('figure', dpi=100)
 
 #variables
-colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo'])
-cl= 6
-cl2 = 4
-cl3 = 5
-eps = 2
-min_samples=15
-preference=None
+colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
+cl= 6 #number of clusters for kmeans
+cl2 = 4 #number of clusters for agglomerative clustering
+cl3 = 5 #number of clusters for 
+eps = 2 #min distance for density for dbscan
+min_samples=15 #min samples for dbscan
 
 #read in data
 H1dat = loadmat('Data/' + 'H1_SeismicBLRMS.mat')
 edat = np.loadtxt('Data/H1_earthquakes.txt')
 
-#earthquake + microseismic channels  
+# read in earthquake + microseismic channels as vdat/vchannels
 cols = [1,6,7,12,13,18,19,24,25,30,31,36,37,42,43,48,49]
 vdat = np.array(H1dat['data'][0])
 for i in cols:
@@ -57,7 +55,7 @@ timetuples = vdat.T
 vdat_smth = scipy.signal.savgol_filter(vdat,49,1)
 timetuples2 = vdat_smth.T
 
-#earthquake channels  
+#read in earthquake channels as vdat2/vchan2
 cols = [6,12,18,24,30,36,42,48]
 vdat2 = np.array(H1dat['data'][0])
 for i in cols:
@@ -70,7 +68,7 @@ timetuples3 = vdat2.T
 vdat_smth2 = scipy.signal.savgol_filter(vdat2,49,1)
 timetuples4 = vdat_smth2.T
 
-#filter by predicted ground motion
+#use predicted ground motion to determine which earthquakes are bigger (commented out)
 '''col = len(edat)
 gdat = np.array([])
 for i in range(col):
@@ -79,7 +77,7 @@ for i in range(col):
 gdat = gdat.T
 glq = np.percentile(gdat,83.75)'''
 
-#gps time                                                                      
+#convert time to gps time                                                                      
 times = '2017-03-01 00:00:00'
 t = Time(times,format='iso',scale='utc')
 t_start= int(np.floor(t.gps/60)*60)
@@ -88,7 +86,7 @@ dur_in_minutes = dur_in_days*24*60
 dur = dur_in_minutes*60
 t_end = t_start+dur
 
-#use only earthquakes with signifigant ground motion                         
+#use only earthquakes with signifigant ground motion (commented out)                         
 '''col = len(edat)
 etime = np.array([])
 for i in range(col):
@@ -97,7 +95,7 @@ for i in range(col):
         etime = np.append(etime,point)'''
 etime = np.array(edat[:,5])
 
-#use only march earthquakes                                                   
+#use only earthqaukes that occur in March 2017         
 col = len(etime)
 etime_march = np.array([])
 for i in range(col):
@@ -105,7 +103,7 @@ for i in range(col):
         point = etime[i]
         etime_march = np.append(etime_march,point)
 
-#plot graph of EQ channels with EQs indicated                                 
+#plot graph of EQ channels with known EQs indicated                                 
 xvals = np.arange(t_start,t_end,60)
 fig,axes  = plt.subplots(len(vdat2),figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
@@ -119,19 +117,21 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in etime_march:
         ax.axvline(x=e)
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQs_all_indicated.png\
-'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQs_all_indicated.png')
+fig.savefig('Figures/EQs_all_indicated')
 
 #clustering
-kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3)
-db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3)
+kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #kmeans clustering of earthquake channels
+db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3) #dbscan clustering of earthquake channels
+ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
+
+#other clustering algorithms
+#birch = Birch(n_clusters=cl3).fit(timetuples)
 #af = AffinityPropagation(preference=preference).fit(timetuples)
 #bandwidth = estimate_bandwidth(timetuples, quantile=0.2, n_samples=100)
 #ms = MeanShift(bandwidth=bandwidth,bin_seeding=True)
 #ms.fit(timetuples3)
-#labels = spectral_clustering(timetuples, n_clusters=4, eigen_solver='arpack')
-ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3)
-#birch = Birch(n_clusters=cl3).fit(timetuples)
+#labels = spectral_clustering(timetuples, n_clusters=4, eigen_solver='arpack
 
 #print number of clusters
 n_clusters_ = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
@@ -141,7 +141,7 @@ print('there are ' +str(n_clusters_) + ' clusters for dbscan')
 #n_clusters3 = len(set(ms.labels_)) - (1 if -1 in ms.labels_ else 0)
 #print('there are ' +str(n_clusters3) + ' clusters for meanshift')
 
-#find cluster labels at each earthquake occurence                         
+#find cluster labels at each earthquake occurence (commented out)
 '''a = np.array([])
 for i in etime_march:
     vals = abs(xvals - i)
@@ -177,22 +177,19 @@ for t in etime_march:
         agcluster = ag.labels_[aval]
         agclusters = np.append(agclusters,agcluster)
 
-#histogram of clusters                                                                                                                                             
-'''fig = plt.figure()
-ax = fig.gca()
-ax.hist(dbclusters)
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','dbscan_EQ__hist.png'))'''
-print(collections.Counter(dbclusters))
-db_count = collections.Counter(dbclusters).most_common(1)
-db_list = [x[1] for x in db_count]
-db_max = db_list[0]
-db_score = db_max/len(dbclusters)
-print('dbscore is ' + str(db_score))
+#histogram of clusters (commented out)                                                                                                                            
 
 '''fig = plt.figure()
 ax = fig.gca()
 ax.hist(kclusters)
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','kmeans_'+str(cl)+'_EQ__hist.png'))'''
+fig.savefig('/home/roxana.popescu/public_html/'+'kmeans_'+str(cl)+'_EQ__hist.png'))'''
+
+'''fig = plt.figure()
+ax = fig.gca()
+ax.hist(dbclusters)
+fig.savefig('/home/roxana.popescu/public_html/'+dbscan_EQ__hist.png')'''
+
+#kmeans score determined by percent of points sorted into one cluster near EQ
 print(collections.Counter(kclusters))
 k_count = collections.Counter(kclusters).most_common(1)
 k_list = [x[1] for x in k_count]
@@ -200,6 +197,15 @@ k_max = k_list[0]
 k_score = k_max/len(kclusters)
 print('kscore is ' + str(k_score))
 
+#dbscan score determined by percent of points sorted into one cluster near EQ
+print(collections.Counter(dbclusters))
+db_count = collections.Counter(dbclusters).most_common(1)
+db_list = [x[1] for x in db_count]
+db_max = db_list[0]
+db_score = db_max/len(dbclusters)
+print('dbscore is ' + str(db_score))
+
+#agglomerative clustering score determined by percent of points sorted into one cluster near EQ
 print(collections.Counter(agclusters))
 ag_count = collections.Counter(agclusters).most_common(1)
 ag_list = [x[1] for x in ag_count]
@@ -207,7 +213,7 @@ ag_max = ag_list[0]
 ag_score = ag_max/len(agclusters)
 print('agscore is ' + str(ag_score))
 
-#plot kmeans graph for EQ
+#plot graph of kmeans clustering for EQ
 xvals = np.arange(t_start,t_end,60)
 fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
@@ -218,12 +224,13 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.set_xlabel('GPS Time')
     ax.grid(True, which='both')
     ax.legend()
-    #for e in range(len(etime_march)):
-    #    ax.axvline(x=etime_march[e], color=colors[int(kclusters[e])])
+    for e in range(len(etime_march)):
+        ax.axvline(x=etime_march[e])
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','Kmeans_all'+str(cl)+'_.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'Kmeans_all'+str(cl)+'_.png')
+fig.savefig('Figures/Kmeans_all_'+str(cl)+'.png')
 
-#plot dbscan for EQ
+#plot graph of dbscan clustering for EQ
 fig, axes = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data, c=colors[db.labels_], edgecolor='',
@@ -233,13 +240,13 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.set_xlabel('GPS Time')
     ax.grid(True, which='both')
     ax.legend()
-    #for e in range(len(etime_march)):
-    #    ax.axvline(x=etime_march[e], color=colors[int(dbclusters[e])])
+    for e in range(len(etime_march)):
+        ax.axvline(x=etime_march[e])
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html/','dbscan_all_.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'dbscan_all_.png')
+fig.savefig('Figures/dbscan_all.png')
 
-
-#plot agglomerative clustering graph for both
+#plot agglomerative clustering graph for EQ
 fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data,c=colors[ag.labels_],edgecolor='',
@@ -249,13 +256,14 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.set_xlabel('Time [days]')
     ax.grid(True, which='both')
     ax.legend()
-    #for e in range(len(etime_march)):
-    #    ax.axvline(x=etime_march[e], color=colors[int(agclusters[e])])
+    for e in range(len(etime_march)):
+        ax.axvline(x=etime_march[e])
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html','3sensors_EQ_agclustering_'+str(cl2)+'.png'))
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_agclustering_'+str(cl2)+'.png')
+fig.savefig('Figures/EQ_agclustering_'+str(cl2)+'.png')
 
 '''
-#plot birch  clustering graph for both
+#plot birch  clustering graph for EQ+microseism
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, chan in zip(axes, vdat, vchans):
     ax.scatter(xvals, data,c=colors[birch.labels_],edgecolor='',
@@ -267,5 +275,6 @@ for ax, data, chan in zip(axes, vdat, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig(os.path.join('/home/roxana.popescu/public_html','3sensors_EQ+microseism_birchclustering_'+str(cl3)+'.png'))
+#fig.savefig('/home/roxana.popescu/public_html','EQ+microseism_birchclustering_'+str(cl3)+'.png')
+fig.savefig('Figures/EQ+microseism_birchclustering_'+str(cl3)+'.png')
 '''

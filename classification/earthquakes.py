@@ -141,4 +141,5 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv2.png')
+#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv2.png')
+fig.savefig('Figures/EQ_XYZ_'+str(cl)+'_data_deriv2.png')

@@ -32,9 +32,9 @@ plt.rc('figure', dpi=100)
 
 #variables
 colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
-cl= 6 #number of clusters for kmeans
-cl2 = 4 #number of clusters for agglomerative clustering
-cl3 = 5 #number of clusters for birch 
+cl= 8 #number of clusters for kmeans
+cl2 = 3 #number of clusters for agglomerative clustering
+cl3 = 7 #number of clusters for birch 
 eps = 2 #min distance for density for dbscan
 min_samples=15 #min samples for dbscan
 
@@ -68,15 +68,6 @@ timetuples3 = vdat2.T
 vdat_smth2 = scipy.signal.savgol_filter(vdat2,49,1)
 timetuples4 = vdat_smth2.T
 
-#use predicted ground motion to determine which earthquakes are bigger (commented out)
-'''col = len(edat)
-gdat = np.array([])
-for i in range(col):
-    point = edat[i][7]
-    gdat = np.append(gdat,point)
-gdat = gdat.T
-glq = np.percentile(gdat,83.75)'''
-
 #convert time to gps time                                                                      
 times = '2017-03-01 00:00:00'
 t = Time(times,format='iso',scale='utc')
@@ -86,14 +77,23 @@ dur_in_minutes = dur_in_days*24*60
 dur = dur_in_minutes*60
 t_end = t_start+dur
 
+#use predicted ground motion to determine which earthquakes are bigger (commented out)
+row, col = np.shape(edat)
+gdat = np.array([])
+for i in range(row):
+    point = edat[i][7]
+    gdat = np.append(gdat,point)
+gdat = gdat.T
+glq = np.percentile(gdat,83.75)
+
 #use only earthquakes with signifigant ground motion (commented out)                         
-'''col = len(edat)
+row, col = np.shape(edat)
 etime = np.array([])
-for i in range(col):
-    if (edat[i][7] >= glq):
+for i in range(row):
+    if (edat[i][21] >= glq):
         point = edat[i][5]
-        etime = np.append(etime,point)'''
-etime = np.array(edat[:,5])
+        etime = np.append(etime,point)
+#etime = np.array(edat[:,5])
 
 #use only earthqaukes that occur in March 2017         
 col = len(etime)
@@ -123,7 +123,7 @@ fig.savefig('Figures/EQs_all_indicated')
 #clustering
 kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #kmeans clustering of earthquake channels
 db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3) #dbscan clustering of earthquake channels
-#ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
+ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
 #birch = Birch(n_clusters=cl3).fit(timetuples3)
 
 #other clustering algorithms
@@ -317,7 +317,8 @@ ag_score = ag_max_count/len(agclusters)
 agtot_max_count = agtot_list2[ag_index]
 agtot_score = agtot_max_count/len(ag.labels_)
 agrel_score = ag_score/agtot_score
-print('ag_score is '+str(ag_score)+', agtot_score is '+str(agtot_score)+ ', and agrel_score is ' +str(agrel_score))'''
+print('ag_score is '+str(ag_score)+', agtot_score is '+str(agtot_score)+ ', and agrel_score is ' +str(agrel_score))
+'''
 
 #birch clustering score determined by percent of points into one cluster near EQ
 '''print('********Results of Birch Clustering********')
@@ -357,11 +358,11 @@ btot_score = btot_max_count/len(birch.labels_)
 brel_score = b_score/btot_score
 print('b_score is '+str(b_score)+', btot_score is '+str(btot_score)+ ', and brel_score is ' +str(brel_score))'''
 
-#cluster scores using silhoutette coefficient
+#cluster scores using silhoutette coefficient and calinsky-harabaz index
 #print(metrics.silhouette_score(timetuples3,kmeans.labels_))
 #print(metrics.silhouette_score(timetuples3,db.labels_))
-print(metrics.calinski_harabaz_score(timetuples3, kmeans.labels_))
-print(metrics.calinski_harabaz_score(timetuples3, db.labels_))
+#print(metrics.calinski_harabaz_score(timetuples3, kmeans.labels_))
+#print(metrics.calinski_harabaz_score(timetuples3, db.labels_))
 #print(metrics.calinsku_harabaz_score(timetuples3, ag.labels_))
 #print(metrics.calinski_harabaz_score(timetuples3, birch.labels_))
 

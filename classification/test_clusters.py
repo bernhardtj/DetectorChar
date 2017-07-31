@@ -123,7 +123,7 @@ fig.savefig('Figures/EQs_all_indicated')
 #clustering
 kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #kmeans clustering of earthquake channels
 db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3) #dbscan clustering of earthquake channels
-ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
+#ag = AgglomerativeClustering(n_clusters = cl2, linkage='complete').fit(timetuples3) #agglomerative clustering of earthquake channels
 #birch = Birch(n_clusters=cl3).fit(timetuples3)
 
 #other clustering algorithms

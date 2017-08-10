@@ -28,7 +28,7 @@ import scipy.signal
 from astropy.time import Time
 import collections
 
-plt.rc('text', usetex=True)
+#plt.rc('text', usetex=True)
 plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 plt.rc('axes', labelsize=20.0)
 plt.rc('axes', axisbelow=True)
@@ -161,7 +161,6 @@ for cl in range(2,11):
     k_cal_score = metrics.calinski_harabaz_score(timetuples, kmeans.labels_)
     print('For kmeans the calinski harabaz score is ' + str(k_cal_score))
     
-
 #dbscan clustering loop
 '''
 min_samples_list = [10,20,25,30]
@@ -238,7 +237,7 @@ for ax, data, chan in zip(axes, vdat, vchans2):
 fig.tight_layout()
 try:
     fig.savefig('/home/roxana.popescu/public_html/'+'EQdata_Kmeans_'+str(cl)+'.png')
-except IOerror:
+except FileNotFoundError:
     fig.savefig('Figures/EQdata_Kmeans_'+str(cl)+'.png')
 
 #Plot #2:plot graph of dbscan clustering for EQ
@@ -261,6 +260,6 @@ for ax, data, chan in zip(axes, vdat, vchans2):
 fig.tight_layout()
 try:
     fig.savefig('/home/roxana.popescu/public_html/'+'dbscan_all_.png')
-except IOerror:
+except FileNotFoundError:
     fig.savefig('Figures/dbscan_all.png')
 

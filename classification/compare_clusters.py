@@ -3,9 +3,10 @@
 '''
 This script reads in seismic noise data from March 2017 and earthquake data.
 It shifts the data by time for clustering
-It creates a list of earthquake times in March when the peak ground motion is greater than a certain amount. 
+It creates a list of earthquake times in March when the peak ground motion is greater than a certain amount.
 It clusters earthquake channels using kmeans and dbscan.
-It compares the clusters around the earthquake times to deterime effectiveness of clustering  
+It compares the clusters around the earthquake times to determine
+effectiveness of clustering
 '''
 from __future__ import division
 from sklearn.cluster import KMeans
@@ -35,58 +36,62 @@ plt.rc('axes.formatter', limits=[-3,4])
 plt.rc('legend', fontsize=14.0)
 plt.rc('xtick', labelsize=16.0)
 plt.rc('ytick', labelsize=16.0)
-plt.rc('figure', dpi=100)
+plt.rc('figure', dpi=200)
 
-#variables
-colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
-cl= 6 #number of clusters for kmeans
+# colors for clusters
+colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum',
+    'darkblue','pink','orangered','indigo'])
+
+cl  = 6 #number of clusters for kmeans
 cl2 = 3 #number of clusters for agglomerative clustering
-cl3 = 7 #number of clusters for birch 
+cl3 = 7 #number of clusters for birch
 eps = 2 #min distance for density for dbscan
 min_samples=15 #min samples for dbscan
 
 #read in data
 H1dat = loadmat('Data/' + 'H1_SeismicBLRMS.mat')
-edat = np.loadtxt('Data/H1_earthquakes.txt')
+edat  = np.loadtxt('Data/H1_earthquakes.txt')
 
-#read in earthquake channels
-cols = [6,12,18,24,30,36,42,48]
-vdat = np.array(H1dat['data'][0])
+# read in earthquake channels
+cols   = [6, 12, 18, 24, 30, 36, 42, 48]
+vdat   = np.array(H1dat['data'][0])
 vchans = np.array(H1dat['chans'][0])
 for i in cols:
-    add = np.array(H1dat['data'][i])
+    add  = np.array(H1dat['data'][i])
     vdat = np.vstack((vdat, add))
 for i in cols:
     vchans = np.append(vchans,H1dat['chans'][i])
 timetuples = vdat.T
 
-vdat2 = vdat
+vdat2   = vdat
 vchans2 = vchans
-#shift the dat                                                                                                                                             
-t_shift = 30 #how many minutes to shift the data by                                                                                                                 
+#shift the data
+t_shift = 30 #how many minutes to shift the data by
+
 for i in cols:
     add = np.array(H1dat['data'][i])
     for j in range(1, t_shift+1):
-        add_shift = add[j:]
+        add_shift  = add[j:]
         add_values = np.zeros((j,1))
-        add_shift = np.append(add_shift, add_values)
-        vdat2 = np.vstack((vdat2, add_shift))
-        chan = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
-        vchans2 = np.append(vchans2, chan)
+        add_shift  = np.append(add_shift, add_values)
+        vdat2      = np.vstack((vdat2, add_shift))
+        chan       = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
+        vchans2    = np.append(vchans2, chan)
+
 print(np.shape(vdat2))
-vdat2 = vdat[:,:43200-t_shift]
+vdat2       = vdat[:,:43200-t_shift]
 print(np.shape(vdat2))
 timetuples2 = vdat.T
 timetuples3 = vdat[0:num].T
 
-#convert time to gps time                                                                      
+#convert time to gps time
 times = '2017-03-01 00:00:00'
-t = Time(times,format='iso',scale='utc')
-t_start= int(np.floor(t.gps/60)*60)
-dur_in_days= 30
+t           = Time(times,format='iso',scale='utc')
+t_start     = int(np.floor(t.gps/60)*60)
+dur_in_days = 30
 dur_in_minutes = dur_in_days*24*60
-dur = dur_in_minutes*60
-t_end = t_start+dur
+dur        = dur_in_minutes*60
+t_end      = t_start + dur
 
 #use peak ground motion to determine which earthquakes are bigger
 row, col = np.shape(edat)
@@ -97,7 +102,7 @@ for i in range(row):
 gdat = gdat.T
 glq = np.percentile(gdat,65)
 
-#use only earthquakes with signifigant ground motion                          
+#use only earthquakes with signifigant ground motion
 row, col = np.shape(edat)
 etime = np.array([])
 for i in range(row):
@@ -105,7 +110,7 @@ for i in range(row):
         point = edat[i][5]
         etime = np.append(etime,point)
 
-#use only earthqaukes that occur in March 2017         
+#use only earthqaukes that occur in March 2017
 col = len(etime)
 etime_march = np.array([])
 for i in range(col):
@@ -136,16 +141,16 @@ for min_samples in min_samples_list:
             aval = np.argmin(val)
             #kpoints = np.append(kpoints, aval)
             dbpoints  = np.append(dbpoints, aval)
-        
+
     #kpoints = np.unique(kpoints) #make sure there are no repeating indices
     dbpoints = np.unique(dbpoints)
 
     #kclusters = np.array([])
     dbclusters = np.array([])
 
-    #for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array 
+    #for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array
     for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)])
-        
+
     #kmeans score determined by ratio of points in cluster/points near EQ to  points in cluster/all points
     '''
     print('  ')

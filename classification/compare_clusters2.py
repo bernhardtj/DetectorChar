@@ -28,7 +28,7 @@ import scipy.signal
 from astropy.time import Time
 import collections
 
-#plt.rc('text', usetex=True)
+plt.rc('text', usetex=True)
 plt.rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 plt.rc('axes', labelsize=20.0)
 plt.rc('axes', axisbelow=True)

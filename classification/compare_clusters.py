@@ -6,6 +6,7 @@ It shifts the data by time for clustering
 It creates a list of earthquake times in March when the peak ground motion is greater than a certain amount. 
 It clusters earthquake channels using kmeans and dbscan.
 It compares the clusters around the earthquake times to deterime effectiveness of clustering  
+It plots the data as clustered by kmeans and dbscan
 '''
 from __future__ import division
 from sklearn.cluster import KMeans
@@ -40,8 +41,6 @@ plt.rc('figure', dpi=100)
 #variables
 colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
 cl= 6 #number of clusters for kmeans
-cl2 = 3 #number of clusters for agglomerative clustering
-cl3 = 7 #number of clusters for birch 
 eps = 2 #min distance for density for dbscan
 min_samples=15 #min samples for dbscan
 
@@ -60,9 +59,10 @@ for i in cols:
     vchans = np.append(vchans,H1dat['chans'][i])
 timetuples = vdat.T
 
+#shift the dat                                                                                                                                             
 vdat2 = vdat
 vchans2 = vchans
-#shift the dat                                                                                                                                             
+num = 9
 t_shift = 30 #how many minutes to shift the data by                                                                                                                 
 for i in cols:
     add = np.array(H1dat['data'][i])
@@ -113,19 +113,10 @@ for i in range(col):
         point = etime[i]
         etime_march = np.append(etime_march,point)
 
-#clustering (for loop is to try different input variables for clustering )
-min_samples_list = [10,20,25,30]
-for min_samples in min_samples_list:
-    #kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples)
-    db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples)
-
-    #print number of clusters
-    print(' ')
-    n_clusters_ = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
-    print('DBSCAN created ' +str(n_clusters_) + ' clusters')
-
-    #add up number of clusters that appear next to each earthquake
-    #kpoints = np.array([])
+#kmeans clustering loop
+for c in range(2,11):
+    kmeans = KMeans(n_clusters=c, random_state=12).fit(timetuples)
+    kpoints = np.array([])
     xvals = np.arange(t_start,t_end,60)
     dbpoints = np.array([])
     for t in etime_march: #for each EQ: collect indices within 5 min of EQ
@@ -134,22 +125,13 @@ for min_samples in min_samples_list:
         for j  in range(tmin,tmax):
             val = abs(xvals-j)
             aval = np.argmin(val)
-            #kpoints = np.append(kpoints, aval)
-            dbpoints  = np.append(dbpoints, aval)
-        
-    #kpoints = np.unique(kpoints) #make sure there are no repeating indices
-    dbpoints = np.unique(dbpoints)
-
-    #kclusters = np.array([])
-    dbclusters = np.array([])
-
-    #for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array 
-    for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)])
-        
+            kpoints = np.append(kpoints, aval)
+    kpoints = np.unique(kpoints) #make sure there are no repeating indices
+    kclusters = np.array([])
+    for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array
     #kmeans score determined by ratio of points in cluster/points near EQ to  points in cluster/all points
-    '''
     print('  ')
-    print('Cl = ' + str(cl))
+    print('Cl = ' + str(c))
     print('Number of points in each cluster that are near an EQ')
     print(collections.Counter(kclusters))
     print('Number of points in each cluster')
@@ -178,7 +160,37 @@ for min_samples in min_samples_list:
     print(k_compare)
     k_cal_score = metrics.calinski_harabaz_score(timetuples, kmeans.labels_)
     print('For kmeans the calinski harabaz score is ' + str(k_cal_score))
-    '''
+    
+
+#dbscan clustering loop
+'''
+min_samples_list = [10,20,25,30]
+e = 2
+for m in min_samples_list:
+    
+    db = DBSCAN(eps=e,min_samples=m).fit(timetuples)
+
+    #print number of clusters
+    print(' ')
+    n_clusters_ = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
+    print('DBSCAN created ' +str(n_clusters_) + ' clusters')
+
+    #add up number of clusters that appear next to each earthquake
+    xvals = np.arange(t_start,t_end,60)
+    dbpoints = np.array([])
+    for t in etime_march: #for each EQ: collect indices within 5 min of EQ
+        tmin = int(t-5*60)
+        tmax = int(t+5*60)
+        for j  in range(tmin,tmax):
+            val = abs(xvals-j)
+            aval = np.argmin(val)
+            dbpoints  = np.append(dbpoints, aval)
+        
+    dbpoints = np.unique(dbpoints)
+    dbclusters = np.array([])
+
+    for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)]) #for each index find the corresponding cluster and store them in array
+        
     #dbscan score determined by percent of points sorted into one cluster near EQ
     print('Number of points in each cluster that are near an EQ')
     print(collections.Counter(dbclusters))
@@ -208,17 +220,16 @@ for min_samples in min_samples_list:
     print(db_compare)
     d_cal_score = metrics.calinski_harabaz_score(timetuples, db.labels_)
     print('For dbscan the calinski harabaz score is ' + str(d_cal_score))
-
 '''
+
 #Plot #1: Plot graph of kmeans clustering for EQ
-num1 = 1.172*pow(10,9)
+kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples)
 xvals = np.arange(t_start,t_end,60)
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, chan in zip(axes, vdat, vchans2):
     ax.scatter(xvals, data,c=colors[kmeans.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
     ax.set_yscale('log')
-    ax.set_xlim(num1+2.5*pow(10,6),num1+3*pow(10,6))
     ax.set_ylim(np.median(data)*0.1, max(data)*1.1)
     ax.set_xlabel('GPS Time')
     ax.grid(True, which='both')
@@ -226,10 +237,17 @@ for ax, data, chan in zip(axes, vdat, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-fig.savefig('/home/roxana.popescu/public_html/'+'EQdata2_Kmeans_'+str(cl)+'_.png')
-fig.savefig('Figures/Kmeans_all_'+str(cl)+'.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQdata_Kmeans_'+str(cl)+'.png')
+except IOerror:
+    fig.savefig('Figures/EQdata_Kmeans_'+str(cl)+'.png')
 
 #Plot #2:plot graph of dbscan clustering for EQ
+db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples)
+xvals = np.arange(t_start,t_end,60)
+#print number of clusters
+n_clusters_ = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
+print('DBSCAN created ' +str(n_clusters_) + ' clusters')
 fig, axes = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, chan in zip(axes, vdat, vchans2):
     ax.scatter(xvals, data, c=colors[db.labels_], edgecolor='',
@@ -242,6 +260,8 @@ for ax, data, chan in zip(axes, vdat, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'dbscan_all_.png')
-fig.savefig('Figures/dbscan_all.png')
-'''
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'dbscan_all_.png')
+except IOerror:
+    fig.savefig('Figures/dbscan_all.png')
+

@@ -31,7 +31,7 @@ plt.rc('ytick', labelsize=16.0)
 plt.rc('figure', dpi=100)
 
 #variables
-cl = 4
+cl = 2
 colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) 
 
 #read in data
@@ -39,8 +39,9 @@ H1dat = loadmat('Data/' + 'H1_SeismicBLRMS.mat')
 edat = np.loadtxt('Data/H1_earthquakes.txt')
 
 #read in earthquake channels
-'''
+
 cols = [6,12,18,24,30,36,42,48]
+num = len(cols)+1
 vdat = np.array(H1dat['data'][0])
 for i in cols:
     add = np.array(H1dat['data'][i])
@@ -49,12 +50,18 @@ vchans = np.array(H1dat['chans'][0])
 for i in cols:
     vchans = np.append(vchans, H1dat['chans'][i])
 vdat_smth = scipy.signal.savgol_filter(vdat,49,1)
-'''
+
 
 #read in six channels
-cols = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
-first = 0
-num = 18
+'''
+name = 'Z'
+#cols = [1,2,3,4,5,18,19,20,21,22,23,36,37,38,39,40,41]
+#cols = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+#cols = [1,2,3,4,5]
+#cols = [7,8,9,10,11]
+cols = [13,14,15,16,17]
+first = 12
+num = len(cols) + 1
 vdat = np.array(H1dat['data'][first])
 for i in cols:
     add = np.array(H1dat['data'][i])
@@ -63,6 +70,7 @@ vchans = np.array(H1dat['chans'][first])
 for i in cols:
     vchans = np.append(vchans, H1dat['chans'][i])
 vdat_smth = scipy.signal.savgol_filter(vdat,49,1)
+'''
 
 #shift the data
 t_shift = 10 #how many minutes to shift the data by
@@ -85,8 +93,8 @@ timetuples = vdat.T
 timetuples2 = vdat[0:num].T
 
 #find best number of clusters using calinsky harabaz index
-
-cl=5
+'''
+cl=3
 kmeans = KMeans(n_clusters=cl-1, random_state=12).fit(timetuples)
 kmeans2 = KMeans(n_clusters=cl, random_state=12).fit(timetuples)
 kmeans3 = KMeans(n_clusters=cl+1, random_state=12).fit(timetuples)
@@ -108,23 +116,8 @@ print(cl)
 print(score2)
 print(score1)
 print(score3)
-
-kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples)
-xvals = (np.arange(len(vdat[0])))/(60.*24.)
-fig, axes = plt.subplots(len(vdat[0:num]), figsize=(40,4*len(vdat[0:num])))
-for ax, data, chan in zip(axes, vdat[0:num], vchans):
-    ax.scatter(xvals, data,c=colors[kmeans.labels_],edgecolor='',
-               s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
-    ax.set_yscale('log')
-    ax.set_ylim(np.median(data)*0.1, max(data)*1.1)
-    ax.set_xlim(0,30)
-    ax.set_xlabel('Time [days]')
-    ax.grid(True, which='both')
-    ax.legend()
-fig.tight_layout()
-fig.savefig('/home/roxana.popescu/public_html/'+'Timeshift_kmeans_XYZchans' + str(cl) + '.png')
-
 '''
+
 #compare with earthquakes
 times = '2017-03-01 00:00:00'
 t = Time(times,format='iso',scale='utc')
@@ -138,19 +131,18 @@ t_end = t_start+dur
 row, col = np.shape(edat)
 gdat = np.array([])
 for i in range(row):
-    point = edat[i][7]
+    point = edat[i][20]
     gdat = np.append(gdat,point)
 gdat = gdat.T
-glq = np.percentile(gdat,80)
+glq = np.percentile(gdat,65)
 
 #use only earthquakes with signifigant ground motion (commented out)                                            
 row, col = np.shape(edat)
 etime = np.array([])
 for i in range(row):
-    if (edat[i][7] >= glq):
+    if (edat[i][20] >= glq):
         point = edat[i][5]
-        etime = np.append(etime,point)
-#etime = np.array(edat[:,5])                                                                                                              
+        etime = np.append(etime,point)                                                                                                              
 
 #use only earthquakes that occur in March 2017                                                                           
 col = len(etime)
@@ -160,41 +152,25 @@ for i in range(col):
         point = etime[i]
         etime_march = np.append(etime_march,point)
 
+kmeans = KMeans(n_clusters = cl, random_state = 12).fit(timetuples)
 #add up number of clusters that appear next to each earthquake                                                                                      
-kpoints = np.array([])
-#dbpoints = np.array([])
-#agpoints = np.array([])                                                                                                                              
-#bpoints = np.array([])                                                                                                                                               
-
+kpoints = np.array([])                                                                                                                              
 xvals = np.arange(t_start,t_end-60*t_shift,60)
-for t in etime_march: #for each EQ: collect indices within 5 min of EQ                                                                                                 
+for t in etime_march: #for each EQ: collect indices within 5 min of EQ                                                                             
     tmin = int(t-5*60)
     tmax = int(t+5*60)
     for j  in range(tmin,tmax):
         val = abs(xvals-j)
         aval = np.argmin(val)
         kpoints = np.append(kpoints, aval)
-        #dbpoints  = np.append(dbpoints, aval)
-        #agpoints = np.append(agpoints, aval)                                                                                                                         
-        #bpoints = np.append(bpoints, aval)                                                                                                                            
-
 kpoints = np.unique(kpoints) #make sure there are no repeating indices                                                                                               
-#dbpoints = np.unique(dbpoints)
-#agpoints = np.unique(agpoints)                                                                                                                                       
-#bpoints = np.unique(bpoints)                                                                                                                                          
-
+                                                                                                                          
 kclusters = np.array([])
-#dbclusters = np.array([])
-#agclusters = np.array([])                                                                                                                                            
-#bclusters = np.array([])                                                                                                                                              
-
-for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array                     
-#for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)])
-#for i in agpoints: agclusters = np.append(agclusters,ag.labels_[int(i)])                                                                                          
-#for i in bpoints: bclusters = np.append(bclusters,birch.labels_[int(i)]) 
-
+                                                                                                                                        
+for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array                       
 #kmeans score determined by ratio of points in cluster/points near EQ to  points in cluster/all points                                                           
-print('********Results of Kmeans Clustering********')
+print('    ')
+print('Cl =  ' + str(cl))
 print('Number of points in each cluster that are near an EQ')
 print(collections.Counter(kclusters))
 print('Number of points in each cluster')
@@ -221,6 +197,7 @@ print('List with the clusters in order')
 print(k_clusters)
 print('Number of points in clusters near EQ divided by total number of points in clusters')
 print(k_compare)
+   
 k_index = np.argmax(k_compare)
 #k_max_count = k_list2[0]                                                                                                                 
 k_max_count = k_list2[k_index]
@@ -230,14 +207,14 @@ ktot_max_count = ktot_list2[k_index]
 ktot_score = ktot_max_count/len(kmeans.labels_)
 krel_score = k_score/ktot_score
 print('k_score is '+str(k_score)+', ktot_score is '+str(ktot_score)+ ', and krel_score is ' +str(krel_score))
+   
+k_cal_score = metrics.calinski_harabaz_score(timetuples2, kmeans.labels_) 
+print('For kmeans the calinski harabaz score is ' +str(k_cal_score))
 
-
-#plot graph of kmeans clustering for EQ                                                                                          
+#Plot 1: Plot of kmeans clustering with earthquakes                                                                                         
 xvals = np.arange(t_start,t_end-60*t_shift,60)
-print(len(xvals))
-print(len(vdat[0]))
-fig,axes  = plt.subplots(len(vdat[0:num]), figsize=(40,4*len(vdat[0:num])))
-for ax, data, chan in zip(axes, vdat[0:num], vchans):
+fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
+for ax, data, chan in zip(axes, vdat, vchans):
     ax.scatter(xvals, data,c=colors[kmeans.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
     ax.set_yscale('log')
@@ -248,5 +225,7 @@ for ax, data, chan in zip(axes, vdat[0:num], vchans):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-fig.savefig('/home/roxana.popescu/public_html/'+'Timeshift_Kmeans_all'+str(cl)+'_.png')                                                                           
-'''
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'Timeshift_Kmeans_'+str(cl)+'.png')                                                                        
+except FileNotFoundError:
+    fig.savefig('Figures/Timeshift_Kmeans_' +str(cl) + '.png')

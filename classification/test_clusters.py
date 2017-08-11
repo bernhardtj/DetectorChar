@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+'''
+This script reads in seismic noise data from March 2017 and earthquake data.
+It creates a list of earthquake times in March when the peak ground motion is greater than a certain amount. 
+It clusters earthquake channels using kmeans and dbscan.
+It compares the clusters around the earthquake times to deterime effectiveness of clustering  
+'''
 from __future__ import division
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
@@ -32,7 +38,7 @@ plt.rc('figure', dpi=100)
 
 #variables
 colors = np.array(['r', 'g', 'b', 'y','c','m','darkgreen','plum','darkblue','pink','orangered','indigo']) #colors for clusters
-cl= 8 #number of clusters for kmeans
+cl= 6 #number of clusters for kmeans
 cl2 = 3 #number of clusters for agglomerative clustering
 cl3 = 7 #number of clusters for birch 
 eps = 2 #min distance for density for dbscan
@@ -43,6 +49,7 @@ H1dat = loadmat('Data/' + 'H1_SeismicBLRMS.mat')
 edat = np.loadtxt('Data/H1_earthquakes.txt')
 
 # read in earthquake + microseismic channels as vdat/vchannels
+'''
 cols = [1,6,7,12,13,18,19,24,25,30,31,36,37,42,43,48,49]
 vdat = np.array(H1dat['data'][0])
 for i in cols:
@@ -54,6 +61,7 @@ for i in cols:
 timetuples = vdat.T
 vdat_smth = scipy.signal.savgol_filter(vdat,49,1)
 timetuples2 = vdat_smth.T
+'''
 
 #read in earthquake channels as vdat2/vchan2
 cols = [6,12,18,24,30,36,42,48]
@@ -77,23 +85,22 @@ dur_in_minutes = dur_in_days*24*60
 dur = dur_in_minutes*60
 t_end = t_start+dur
 
-#use predicted ground motion to determine which earthquakes are bigger (commented out)
+#use peak ground motion to determine which earthquakes are bigger
 row, col = np.shape(edat)
 gdat = np.array([])
 for i in range(row):
-    point = edat[i][7]
+    point = edat[i][20]
     gdat = np.append(gdat,point)
 gdat = gdat.T
-glq = np.percentile(gdat,83.75)
+glq = np.percentile(gdat,65)
 
-#use only earthquakes with signifigant ground motion (commented out)                         
+#use only earthquakes with signifigant ground motion                          
 row, col = np.shape(edat)
 etime = np.array([])
 for i in range(row):
-    if (edat[i][21] >= glq):
+    if (edat[i][20] >= glq):
         point = edat[i][5]
         etime = np.append(etime,point)
-#etime = np.array(edat[:,5])
 
 #use only earthqaukes that occur in March 2017         
 col = len(etime)
@@ -103,7 +110,7 @@ for i in range(col):
         point = etime[i]
         etime_march = np.append(etime_march,point)
 
-#plot graph of EQ channels with known EQs indicated                                 
+#Plot #1: plot graph of EQ channels with known EQs indicated                                 
 xvals = np.arange(t_start,t_end,60)
 fig,axes  = plt.subplots(len(vdat2),figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
@@ -117,8 +124,10 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in etime_march:
         ax.axvline(x=e)
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQs_all_indicated.png')
-fig.savefig('Figures/EQs_all_indicated')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQs_all_indicated.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQs_all_indicated')
 
 #clustering
 kmeans = KMeans(n_clusters=cl, random_state=12).fit(timetuples3) #kmeans clustering of earthquake channels
@@ -135,7 +144,7 @@ db = DBSCAN(eps=eps,min_samples=min_samples).fit(timetuples3) #dbscan clustering
 
 #print number of clusters
 n_clusters_ = len(set(db.labels_)) - (1 if -1 in db.labels_ else 0)
-print('there are ' +str(n_clusters_) + ' clusters for dbscan')
+print('DBSCAN created ' +str(n_clusters_) + ' clusters')
 #n_clusters2 = len(set(af.labels_)) - (1 if -1 in af.labels_ else 0)
 #print('there are ' +str(n_clusters2) + ' clusters for affinity propagatiom')
 #n_clusters3 = len(set(ms.labels_)) - (1 if -1 in ms.labels_ else 0)
@@ -188,7 +197,6 @@ kclusters = np.array([])
 dbclusters = np.array([])
 #agclusters = np.array([])
 #bclusters = np.array([])
-
 for i in kpoints: kclusters = np.append(kclusters,kmeans.labels_[int(i)]) #for each index find the corresponding cluster and store them in array 
 for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)])
 #for i in agpoints: agclusters = np.append(agclusters,ag.labels_[int(i)])
@@ -197,13 +205,13 @@ for i in dbpoints: dbclusters = np.append(dbclusters,db.labels_[int(i)])
 #histogram of clusters (commented out)
 '''fig = plt.figure()
 ax = fig.gca()
-ax.hist(kclusters)
+ax.hist(kpoints)
 fig.savefig('/home/roxana.popescu/public_html/'+'kmeans_'+str(cl)+'_EQ__hist.png'))'''
 
 '''fig = plt.figure()
 ax = fig.gca()
-ax.hist(dbclusters)
-fig.savefig('/home/roxana.popescu/public_html/'+dbscan_EQ__hist.png')'''
+ax.hist(dbpoints)
+fig.savefig('/home/roxana.popescu/public_html/'+ 'dbscan_EQ__hist.png')'''
 
 #kmeans score determined by ratio of points in cluster/points near EQ to  points in cluster/all points
 print('********Results of Kmeans Clustering********')
@@ -213,15 +221,15 @@ print('Number of points in each cluster')
 print(collections.Counter(kmeans.labels_))
 k_count = collections.Counter(kclusters).most_common()
 ktot_count = collections.Counter(kmeans.labels_).most_common()
-k_list_cl = [x[0] for x in k_count]
-k_list = [x[1] for x in k_count]
+k_list_cl = [x[0] for x in k_count] #cluster number
+k_list = [x[1] for x in k_count] #occurences of cluster
 ktot_list_cl = [x[0] for x in ktot_count]
 ktot_list = [x[1] for x in ktot_count]
 k_clusters = np.array([])
 k_compare = np.array([])
 k_list2 = np.array([])
 ktot_list2 = np.array([])
-for i in range(len(k_list_cl)):
+for i in range(len(k_list_cl)): #arrange so that k_clusters k_list2 and k_compare are in the same order
     for j in range(len(ktot_list_cl)):
         if k_list_cl[i] == ktot_list_cl[j]:
             k_clusters = np.append(k_clusters,k_list_cl[i])
@@ -233,6 +241,7 @@ print('List with the clusters in order')
 print(k_clusters)
 print('Number of points in clusters near EQ divided by total number of points in clusters')
 print(k_compare)
+'''
 k_index = np.argmax(k_compare)
 #k_max_count = k_list2[0]
 k_max_count = k_list2[k_index]
@@ -242,8 +251,9 @@ ktot_max_count = ktot_list2[k_index]
 ktot_score = ktot_max_count/len(kmeans.labels_)
 krel_score = k_score/ktot_score
 print('k_score is '+str(k_score)+', ktot_score is '+str(ktot_score)+ ', and krel_score is ' +str(krel_score))
-
+'''
 #dbscan score determined by percent of points sorted into one cluster near EQ
+'''
 print('********Results of DBSCAN Clustering********')
 print('Number of points in each cluster that are near an EQ')
 print(collections.Counter(dbclusters))
@@ -280,6 +290,7 @@ dbtot_max_count = dbtot_list2[db_index]
 dbtot_score = dbtot_max_count/len(db.labels_)
 dbrel_score = db_score/dbtot_score
 print('db_score is '+str(db_score)+', dbtot_score is '+str(dbtot_score)+ ', and dbel_score is ' +str(dbrel_score))
+'''
 
 #agglomerative clustering score determined by percent of points sorted into one cluster near EQ
 '''print('********Results of Agglomerative Clustering********')
@@ -361,12 +372,13 @@ print('b_score is '+str(b_score)+', btot_score is '+str(btot_score)+ ', and brel
 #cluster scores using silhoutette coefficient and calinsky-harabaz index
 #print(metrics.silhouette_score(timetuples3,kmeans.labels_))
 #print(metrics.silhouette_score(timetuples3,db.labels_))
-#print(metrics.calinski_harabaz_score(timetuples3, kmeans.labels_))
+k_cal_score = metrics.calinski_harabaz_score(timetuples3, kmeans.labels_)
+print('For kmeans the calinski harabaz score is ' + str(k_cal_score))
 #print(metrics.calinski_harabaz_score(timetuples3, db.labels_))
 #print(metrics.calinsku_harabaz_score(timetuples3, ag.labels_))
 #print(metrics.calinski_harabaz_score(timetuples3, birch.labels_))
 
-#plot graph of kmeans clustering for EQ
+#Plot #2: Plot graph of kmeans clustering for EQ
 xvals = np.arange(t_start,t_end,60)
 fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
@@ -380,10 +392,12 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'Kmeans_all'+str(cl)+'_.png')
-fig.savefig('Figures/Kmeans_all_'+str(cl)+'.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQdata_Kmeans_'+str(cl)+'_.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQdata_Kmeans_'+str(cl)+'.png')
 
-#plot graph of dbscan clustering for EQ
+#Plot #3:plot graph of dbscan clustering for EQ
 fig, axes = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data, c=colors[db.labels_], edgecolor='',
@@ -396,11 +410,14 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'dbscan_all_.png')
-fig.savefig('Figures/dbscan_all.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'dbscan.png')
+except FileNotFoundError:
+    fig.savefig('Figures/dbscan.png')
 
-#plot agglomerative clustering graph for EQ
-'''fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
+#Plot #4: plot agglomerative clustering graph for EQ
+'''
+fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data,c=colors[ag.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
@@ -412,11 +429,14 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_agclustering_'+str(cl2)+'.png')
-fig.savefig('Figures/EQ_agclustering_'+str(cl2)+'.png')'''
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_agclustering_'+str(cl2)+'.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_agclustering_'+str(cl2)+'.png')'''
 
-#plot birch  clustering graph for EQ
-'''fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
+#Plot #5: plot birch  clustering graph for EQ
+'''
+fig,axes  = plt.subplots(len(vdat2), figsize=(40,4*len(vdat2)))
 for ax, data, chan in zip(axes, vdat2, vchans2):
     ax.scatter(xvals, data,c=colors[birch.labels_],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
@@ -428,5 +448,8 @@ for ax, data, chan in zip(axes, vdat2, vchans2):
     for e in range(len(etime_march)):
         ax.axvline(x=etime_march[e])
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_birchclustering_'+str(cl3)+'.png')
-fig.savefig('Figures/EQ+microseism_birchclustering_'+str(cl3)+'.png')'''
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_birchclustering_'+str(cl3)+'.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ+microseism_birchclustering_'+str(cl3)+'.png')
+'''

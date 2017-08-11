@@ -75,8 +75,10 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv.png')
-fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_deriv.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_deriv.png')
 
 #plot of derivatives that are clustered according to derivatives 
 xvals = (np.arange(len(vdat_diff[0])))/(60.*24.)
@@ -91,8 +93,10 @@ for ax, data, chan in zip(axes, vdat_diff, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv_deriv.png')
-fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_deriv_data.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv_deriv.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_deriv_data.png')
 
 #plot of original values (and smoothed data) that are clustered according to original data and derivatives
 xvals = (np.arange(len(vdat[0])))/(60.*24.)
@@ -108,8 +112,10 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-#fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_data+deriv.png')
-fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_data+deriv.png')
+try:
+    fig.savefig(os.path.join('/home/roxana.popescu/public_html/','EQ_XYZ_'+ str(cl)+'_data_data+deriv.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_XYZ_' + str(cl) + '_data_data+deriv.png')
 
 #plot of square of derivatives that are clustered according to square of derivatives
 xvals = (np.arange(len(vdat_diff3[0])))/(60.*24.)
@@ -124,8 +130,10 @@ for ax, data, chan in zip(axes, vdat_diff3, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv2_deriv2.png')
-fig.savefig('Figures/EQ_XYZ_' + str(cl) + 'deriv2_deriv2.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_deriv2_deriv2.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_XYZ_' + str(cl) + 'deriv2_deriv2.png')
 
 #plot of original values (and smoothed data) that are clustered according to square of derivatives
 xvals = (np.arange(len(vdat[0])))/(60.*24.)
@@ -141,5 +149,7 @@ for ax, data, data2, chan in zip(axes, vdat, vdat_smth, vchans):
     ax.grid(True, which='both')
     ax.legend()
 fig.tight_layout()
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv2.png')
-fig.savefig('Figures/EQ_XYZ_'+str(cl)+'_data_deriv2.png')
+try:
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_XYZ_'+ str(cl)+'_data_deriv2.png')
+except FileNotFoundError:
+    fig.savefig('Figures/EQ_XYZ_'+ str(cl) + '_data_deriv2.png')

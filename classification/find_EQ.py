@@ -70,13 +70,19 @@ if __debug__:
     print(peaks)
 
 # find peaks in all three z channel directions
-widths  = np.arange(5, 40)   # range of widths in minutes
-peaks1 = sig.find_peaks_cwt(vdat[2], widths, min_snr = 7, noise_perc=20)
-peaks2 = sig.find_peaks_cwt(vdat[5], widths, min_snr = 7, noise_perc=20)
-peaks3 = sig.find_peaks_cwt(vdat[8], widths, min_snr = 7, noise_perc=20)
+widths  = np.arange(5, 140)   # range of widths in minutes
+min_snr = 8
+noise_perc = 15
+peaks1 = sig.find_peaks_cwt(vdat[2], widths,
+                                min_snr = min_snr, noise_perc=noise_perc)
+peaks2 = sig.find_peaks_cwt(vdat[5], widths,
+                                min_snr = min_snr, noise_perc=noise_perc)
+peaks3 = sig.find_peaks_cwt(vdat[8], widths,
+                                min_snr = min_snr, noise_perc=noise_perc)
 peak_list = np.array([])
 
 # use logical AND operation here instead
+# needs to allow for slightly different arrival times at the different stations
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
@@ -96,17 +102,18 @@ for ax, data, chan in zip(axes, vdat, vchans):
                    rasterized=True)
     ax.set_yscale('log')
     ax.set_ylim(9, 1.1e4)
-    
-    ax.set_xlabel('Time (after GPS ' + str(t[0]) + ') [s]')
+    ax.set_ylabel('RMS Velocity [nm/s]') 
+    ax.set_xlabel('Time (after GPS ' + str(t[0]) + ') [days]')
     ax.grid(True, which='both')
     ax.legend()
     for e in range(len(EQ_locations)):
         ax.axvline(x=(EQ_locations[e] - t[0])/seconds_per_day,
-                       color = 'blue', alpha=0.3, linewidth=2)
+                       color = 'blue', alpha=0.3, linewidth=3)
 
 plt.xlim((0, (t[-1]-t[0])/seconds_per_day))
+plt.title('Seismic BLRMS')
 fig.tight_layout()
-fig.savefig('Figures/EQ_peaks_indicated.png')
+fig.savefig('Figures/EQ_peaks_indicated.pdf')
 
 # can't have these hard coded path names; doesn't run for anyone else this way
 #fig.savefig('/home/roxana.popescu/public_html/'+'EQ_peaks_indicated.png')

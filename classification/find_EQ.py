@@ -32,15 +32,20 @@ dur     = dur_in_minutes*60
 t_end   = t_start+dur
 xvals   = np.arange(t_start,t_end, 60)
 
-widths  = np.arange(35,40)
-peaks   = signal.find_peaks_cwt(vdat[0], widths)
-
-print(peaks)
-
+#find peaks in all three z channel directions
+widths = np.arange(20,25)
+peaks1 = signal.find_peaks_cwt(vdat[2], widths)
+peaks2 = signal.find_peaks_cwt(vdat[5], widths)
+peaks3 = signal.find_peaks_cwt(vdat[8], widths)
+peak_list = np.array([])
+for i in peaks1:
+    for j in peaks2:
+        for k in peaks3:
+            if (i == j and i == k):
+                peak_list = np.append(peak_list, i)
 EQ_locations = np.array([])
-for i in peaks:
-    EQ_locations = np.append(EQ_locations, xvals[i])
-print(EQ_locations)
+for i in peak_list:
+    EQ_locations = np.append(EQ_locations, xvals[int(i)])
 
 fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
 for ax, data, chan in zip(axes, vdat, vchans):

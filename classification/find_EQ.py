@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import division
 
 import numpy as np
@@ -42,7 +40,7 @@ mpl.rc("savefig", dpi=100)
 
 # read in data
 H1dat = sio.loadmat('Data/' + 'H1_SeismicBLRMS.mat')
-edat  = np.loadtxt('Data/'  + 'H1_earthquakes.txt')
+edat  = np.loadtxt('Data/H1_earthquakes.txt')
 
 #read in earthquake channels
 cols   = [6,12,18,24,30,36,42,48]
@@ -65,22 +63,29 @@ t       = np.arange(t_start,t_end, 60)
 seconds_per_day = 24*60*60
 
 # Find peaks using scipy CWT
-widths  = np.arange(5, 40)   # range of widths in minutes
-peaks   = sig.find_peaks_cwt(vdat[2], widths,
-                                 min_snr = 7,
-                                 noise_perc=20)
+
 
 if __debug__:
     print("This is something to do with peaks")
     print(peaks)
 
-EQ_locations = np.array([])
-for i in peaks:
-    EQ_locations = np.append(EQ_locations, t[i])
+# find peaks in all three z channel directions
+widths  = np.arange(5, 40)   # range of widths in minutes
+peaks1 = sig.find_peaks_cwt(vdat[2], widths, min_snr = 7, noise_perc=20)
+peaks2 = sig.find_peaks_cwt(vdat[5], widths, min_snr = 7, noise_perc=20)
+peaks3 = sig.find_peaks_cwt(vdat[8], widths, min_snr = 7, noise_perc=20)
+peak_list = np.array([])
 
-if __debug__:
-    print("What are EQ locations?")
-    print(EQ_locations)
+# use logical AND operation here instead
+for i in peaks1:
+    for j in peaks2:
+        for k in peaks3:
+            if (i == j and i == k):
+                peak_list = np.append(peak_list, i)
+EQ_locations = np.array([])
+
+for i in peak_list:
+    EQ_locations = np.append(EQ_locations, t[int(i)])
 
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40,4*len(vdat)),
                              sharex=True)
@@ -101,11 +106,7 @@ for ax, data, chan in zip(axes, vdat, vchans):
 
 plt.xlim((0, (t[-1]-t[0])/seconds_per_day))
 fig.tight_layout()
-
-if __debug__:
-    print("Saving Figure...")
-
-fig.savefig('Figures/EQ_peaks_indicated.pdf')
+fig.savefig('Figures/EQ_peaks_indicated.png')
 
 # can't have these hard coded path names; doesn't run for anyone else this way
 #fig.savefig('/home/roxana.popescu/public_html/'+'EQ_peaks_indicated.png')

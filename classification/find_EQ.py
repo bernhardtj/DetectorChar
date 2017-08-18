@@ -6,12 +6,15 @@ from astropy.time import Time
 import collections
 
 import matplotlib as mpl
-#matplotlib.use('Agg')
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-
 import scipy.signal as sig
 
-plt.style.use('seaborn-dark')
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras import optimizers
+
+#plt.style.use('seaborn-dark')
 mpl.rcParams.update({
     'axes.grid': True,
     'axes.titlesize': 'medium',
@@ -37,7 +40,6 @@ mpl.rcParams.update({
 
 mpl.rc("savefig", dpi=100)
 
-
 # read in data
 H1dat = sio.loadmat('Data/' + 'H1_SeismicBLRMS.mat')
 edat  = np.loadtxt('Data/H1_earthquakes.txt')
@@ -51,6 +53,24 @@ for i in cols:
     vdat   = np.vstack((vdat, add))
     vchans = np.append(vchans,H1dat['chans'][i])
 
+#shift the data
+t_shift = 0 #how many minutes to shift the data by
+if t_shift > 0:
+    for i in cols:
+        add = np.array(H1dat['data'][i])
+        for j in range(1, t_shift+1):        
+            add_shift = add[j:]
+            #print(np.shape(add_shift))
+            add_values = np.zeros((j,1))
+            add_shift = np.append(add_shift, add_values)
+            #print(np.shape(add_shift))
+            vdat = np.vstack((vdat, add_shift))
+            chan = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
+            vchans = np.append(vchans, chan)
+    vdat = vdat[:,:43200-t_shift]
+size, points = np.shape(vdat)
+print(points)    
+
 #convert time to gps time                      
 times   = '2017-03-01 00:00:00'
 t       = Time(times,format='iso',scale='utc')
@@ -59,7 +79,7 @@ dur_in_days = 30
 dur_in_minutes = dur_in_days*24*60
 dur     = dur_in_minutes * 60
 t_end   = t_start + dur
-t       = np.arange(t_start,t_end, 60)
+t       = np.arange(t_start,t_end-t_shift*60, 60)
 seconds_per_day = 24*60*60
 
 # Find peaks using scipy CWT
@@ -67,7 +87,8 @@ seconds_per_day = 24*60*60
 
 if __debug__:
     print("This is something to do with peaks")
-    print(peaks)
+   # print(peaks)
+
 
 # find peaks in all three z channel directions
 widths  = np.arange(5, 140)   # range of widths in minutes
@@ -86,13 +107,55 @@ peak_list = np.array([])
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
-            if (i == j and i == k):
-                peak_list = np.append(peak_list, i)
+            if (abs(i-j) <= 2*60 and abs(i-k) <= 2*60):
+                avg = (i+j+k)/3
+                peak_list = np.append(peak_list, avg)
 EQ_locations = np.array([])
-
 for i in peak_list:
     EQ_locations = np.append(EQ_locations, t[int(i)])
 
+#assign X
+X = vdat.T
+print(np.shape(X))
+#assign Y to 1 or 0 depending on whether there is an earthquake
+Y = np.array([])
+for i in t:
+    xlen = len(Y)
+    for j in EQ_locations:
+        if (j-5*60 <= i <= j+5*60):
+            Y = np.append(Y,1)
+            break
+    xlen2 = len(Y)
+    if xlen == xlen2:
+        Y  = np.append(Y,0)
+print(len(Y))
+print(collections.Counter(Y))
+
+#neural network
+optimizer = optimizers.Adam(lr = 1e-5)
+model = Sequential()
+model.add(Dense(size, input_shape = (size,), activation = 'elu'))
+model.add(Dropout(.1))
+model.add(Dense(9, activation = 'elu'))
+model.add(Dropout(.1))
+model.add(Dense(1, activation = 'softmax'))
+#model.output_shape
+model.compile(loss = 'binary_crossentropy', optimizer = optimizer, metrics = ['accuracy'])
+model.fit(X,Y, epochs = 10, batch_size = 256, verbose = 1)
+score = model.evaluate(X,Y)
+print(score)
+model.summary()
+
+#prediction values 
+Y_pred = model.predict(X)
+Y_pred2 = Y_pred.T
+Y_pred2 = Y_pred2.astype(int)
+Y_pred3 = np.array([])
+for i in Y_pred2:
+    Y_pred3 = np.append(Y_pred3, i)
+Y_pred3 = Y_pred3.astype(int)
+
+#Plot earthquakes determined by peaks
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40,4*len(vdat)),
                              sharex=True)
 for ax, data, chan in zip(axes, vdat, vchans):
@@ -113,7 +176,8 @@ for ax, data, chan in zip(axes, vdat, vchans):
 plt.xlim((0, (t[-1]-t[0])/seconds_per_day))
 plt.title('Seismic BLRMS')
 fig.tight_layout()
-fig.savefig('Figures/EQ_peaks_indicated.pdf')
 
-# can't have these hard coded path names; doesn't run for anyone else this way
-#fig.savefig('/home/roxana.popescu/public_html/'+'EQ_peaks_indicated.png')
+try:
+    fig.savefig('/home/.popescu/public_html/'+'EQ_peaks_indicated.png')
+except: 
+    fig.savefig('Figures/EQ_peaks_indicated.pdf')

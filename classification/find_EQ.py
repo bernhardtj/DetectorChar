@@ -10,10 +10,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras import optimizers
-
 #plt.style.use('seaborn-dark')
 mpl.rcParams.update({
     'axes.grid': True,
@@ -79,12 +75,10 @@ dur_in_days = 30
 dur_in_minutes = dur_in_days*24*60
 dur     = dur_in_minutes * 60
 t_end   = t_start + dur
-t       = np.arange(t_start,t_end-t_shift*60, 60)
+t       = np.arange(t_start,t_end-t_shift, 60)
 seconds_per_day = 24*60*60
 
 # Find peaks using scipy CWT
-
-
 if __debug__:
     print("This is something to do with peaks")
    # print(peaks)
@@ -102,12 +96,12 @@ peaks3 = sig.find_peaks_cwt(vdat[8], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
 peak_list = np.array([])
 
-# use logical AND operation here instead
-# needs to allow for slightly different arrival times at the different stations
+#takes average time for earthquake times from three channels that are within 3 minutes of each other 
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
-            if (abs(i-j) <= 2*60 and abs(i-k) <= 2*60):
+            if (abs(i-j) <= 3 and abs(i-k) <= 3):
+                print(str(i) + ' ' + str(j) + ' ' + str(k))
                 avg = (i+j+k)/3
                 peak_list = np.append(peak_list, avg)
 EQ_locations = np.array([])
@@ -122,7 +116,7 @@ Y = np.array([])
 for i in t:
     xlen = len(Y)
     for j in EQ_locations:
-        if (j-5*60 <= i <= j+5*60):
+        if (j-5 <= i <= j+5):
             Y = np.append(Y,1)
             break
     xlen2 = len(Y)
@@ -131,29 +125,15 @@ for i in t:
 print(len(Y))
 print(collections.Counter(Y))
 
-#neural network
-optimizer = optimizers.Adam(lr = 1e-5)
-model = Sequential()
-model.add(Dense(size, input_shape = (size,), activation = 'elu'))
-model.add(Dropout(.1))
-model.add(Dense(9, activation = 'elu'))
-model.add(Dropout(.1))
-model.add(Dense(1, activation = 'softmax'))
-#model.output_shape
-model.compile(loss = 'binary_crossentropy', optimizer = optimizer, metrics = ['accuracy'])
-model.fit(X,Y, epochs = 10, batch_size = 256, verbose = 1)
-score = model.evaluate(X,Y)
-print(score)
-model.summary()
-
-#prediction values 
-Y_pred = model.predict(X)
-Y_pred2 = Y_pred.T
-Y_pred2 = Y_pred2.astype(int)
-Y_pred3 = np.array([])
-for i in Y_pred2:
-    Y_pred3 = np.append(Y_pred3, i)
-Y_pred3 = Y_pred3.astype(int)
+#saves data as mat file
+data = {}
+data['vdat'] =  vdat
+data['vchans'] = vchans
+data['EQ_locations'] = EQ_locations
+data['X'] = X
+data['Y'] = Y
+data['t'] = t
+sio.savemat('Data/EQ_info.mat',data)
 
 #Plot earthquakes determined by peaks
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40,4*len(vdat)),
@@ -178,6 +158,7 @@ plt.title('Seismic BLRMS')
 fig.tight_layout()
 
 try:
-    fig.savefig('/home/.popescu/public_html/'+'EQ_peaks_indicated.png')
+    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_peaks_indicated.png')
 except: 
     fig.savefig('Figures/EQ_peaks_indicated.pdf')
+

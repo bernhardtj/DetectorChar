@@ -10,7 +10,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 
-#plt.style.use('seaborn-dark')
+plt.style.use('ggplot')
 mpl.rcParams.update({
     'axes.grid': True,
     'axes.titlesize': 'medium',
@@ -86,7 +86,7 @@ if __debug__:
 
 # find peaks in all three z channel directions
 widths  = np.arange(5, 140)   # range of widths in minutes
-min_snr = 8
+min_snr = 5
 noise_perc = 15
 peaks1 = sig.find_peaks_cwt(vdat[2], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
@@ -96,22 +96,25 @@ peaks3 = sig.find_peaks_cwt(vdat[8], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
 peak_list = np.array([])
 
-#takes average time for earthquake times from three channels that are within 3 minutes of each other 
+# takes average time for earthquake times from three channels
+# that are within dtau minutes of each other 
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
-            if (abs(i-j) <= 3 and abs(i-k) <= 3):
-                print(str(i) + ' ' + str(j) + ' ' + str(k))
+            if (abs(i-j) <= dtau and abs(i-k) <= dtau):
+                if __debug__:
+                    print(str(i) + ' ' + str(j) + ' ' + str(k))
                 avg = (i+j+k)/3
                 peak_list = np.append(peak_list, avg)
 EQ_locations = np.array([])
 for i in peak_list:
     EQ_locations = np.append(EQ_locations, t[int(i)])
 
-#assign X
+# assign X
 X = vdat.T
-print(np.shape(X))
-#assign Y to 1 or 0 depending on whether there is an earthquake
+if __debug__:
+    print('Shape of X is ' + str(np.shape(X)))
+# assign Y to 1 or 0 depending on whether there is an earthquake
 Y = np.array([])
 for i in t:
     xlen = len(Y)
@@ -122,21 +125,25 @@ for i in t:
     xlen2 = len(Y)
     if xlen == xlen2:
         Y  = np.append(Y,0)
-print(len(Y))
-print(collections.Counter(Y))
 
-#saves data as mat file
+if __debug__:
+    print('Here are some mysterious uncommented debug statements:')
+    print(len(Y))
+    print(collections.Counter(Y))
+
+# saves data as mat file
+# why do we save X and vdat ???
 data = {}
-data['vdat'] =  vdat
-data['vchans'] = vchans
-data['EQ_locations'] = EQ_locations
-data['X'] = X
-data['Y'] = Y
-data['t'] = t
+data['vdat']     =  vdat
+data['vchans']   = vchans
+data['EQ_times'] = EQ_locations
+data['X']        = X
+data['EQ_labels'] = Y
+data['t']        = t
 sio.savemat('Data/EQ_info.mat',data)
 
 #Plot earthquakes determined by peaks
-fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40,4*len(vdat)),
+fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40, 4*len(vdat)),
                              sharex=True)
 for ax, data, chan in zip(axes, vdat, vchans):
     ax.scatter((t - t[0])/seconds_per_day, data ,
@@ -156,9 +163,10 @@ for ax, data, chan in zip(axes, vdat, vchans):
 plt.xlim((0, (t[-1]-t[0])/seconds_per_day))
 plt.title('Seismic BLRMS')
 fig.tight_layout()
+fig.savefig('Figures/EQ_peaks_indicated.pdf')
 
 try:
-    fig.savefig('/home/roxana.popescu/public_html/'+'EQ_peaks_indicated.png')
+    fig.savefig('/home/roxana.popescu/public_html/' + 'EQ_peaks_indicated.png')
 except: 
-    fig.savefig('Figures/EQ_peaks_indicated.pdf')
+    print(' ')
 

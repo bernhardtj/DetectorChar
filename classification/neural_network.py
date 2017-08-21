@@ -1,8 +1,5 @@
 '''
-Reads in March 2017 earthquake channels and earthquake data
-Shifts the earthquake channels by time
-Makes a list of march earthquakes with peak ground motion greater than 65th percentile
-Creates list that labels each point as near an earthquake or not
+Reads in data from mat file
 Creates a neural network using keras
 Plots data with prediction labels in a graph 
 '''
@@ -25,20 +22,16 @@ np.random.seed(7)
 EQ_data = sio.loadmat('Data/EQ_info.mat')
 vdat = EQ_data['vdat']
 vchans = EQ_data['vchans']
-EQ_locations = EQ_data['EQ_locations']
+EQ_times = EQ_data['EQ_times']
 X = EQ_data['X']
-print(np.shape(X))
-Y = EQ_data['Y']
-Y = Y.T
-print(np.shape(Y))
+points, size  = np.shape(X)
+Y = EQ_data['EQ_labels']
+Y = Y.reshape(43200,)
 t = EQ_data['t']
-
 #print info about data
-size, points = np.shape(vdat)
-num = size
-print(' ')
-print(size)
-print(' ')
+print('size is ' + str(size))
+print('Shape of X is ' + str(np.shape(X)))
+print('Shape of Y is ' + str(np.shape(Y)))
 
 #neural network
 optimizer = optimizers.Adam(lr = 1e-5)
@@ -58,16 +51,16 @@ model.summary()
 #prediction values 
 Y_pred = model.predict(X)
 Y_pred2 = Y_pred.T
-Y_pred2 = Y_pred2.astype(int)
 Y_pred3 = np.array([])
 for i in Y_pred2:
     Y_pred3 = np.append(Y_pred3, i)
-Y_pred3 = np.astype(int)
+Y_pred3 = Y_pred3.astype(int)
 
 #Plot of data points 
 colors = np.array(['r', 'b', 'm', 'g'])
 labels = Y.T
 labels = labels.astype(int)
+num  = size
 fig,axes  = plt.subplots(len(vdat[0:num]), figsize=(40,4*len(vdat[0:num])))
 for ax, data, chan in zip(axes, vdat[0:num], vchans):
     ax.scatter(t, data,c=colors[Y_pred3],edgecolor='',
@@ -77,11 +70,11 @@ for ax, data, chan in zip(axes, vdat[0:num], vchans):
     ax.set_xlabel('GPS Time')
     ax.grid(True, which='both')
     ax.legend()
-    #for e in range(len(etime_march)):
-    #    ax.axvline(x=etime_march[e])
+    for e in range(len(EQ_times)):
+        ax.axvline(x=EQ_times[e])
 fig.tight_layout()
 try:
     fig.savefig('/home/roxana.popescu/public_html/'+'NeuralNetworkComparison3.png')
 except FileNotFoundError:
-    fig.savefig('Figures/NeuralNetworkComparison2.png')
+    fig.savefig('Figures/NeuralNetworkComparison3.png')
 

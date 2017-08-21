@@ -64,8 +64,7 @@ if t_shift > 0:
             chan = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
             vchans = np.append(vchans, chan)
     vdat = vdat[:,:43200-t_shift]
-size, points = np.shape(vdat)
-print(points)    
+size, points = np.shape(vdat)    
 
 #convert time to gps time                      
 times   = '2017-03-01 00:00:00'
@@ -82,7 +81,6 @@ seconds_per_day = 24*60*60
 if __debug__:
     print("This is something to do with peaks")
    # print(peaks)
-
 
 # find peaks in all three z channel directions
 widths  = np.arange(5, 140)   # range of widths in minutes
@@ -114,6 +112,7 @@ for i in peak_list:
 X = vdat.T
 if __debug__:
     print('Shape of X is ' + str(np.shape(X)))
+
 # assign Y to 1 or 0 depending on whether there is an earthquake
 Y = np.array([])
 for i in t:
@@ -126,18 +125,14 @@ for i in t:
     if xlen == xlen2:
         Y  = np.append(Y,0)
 
+#prints information about the shape of Y and the types of points in Y
 print(np.shape(Y))
 print(collections.Counter(Y))
 
-if __debug__:
-    print('Here are some mysterious uncommented debug statements:')
-    print(len(Y))
-    print(collections.Counter(Y))
-
 # saves data as mat file
-# why do we save X and vdat ???
+# saves vdat and vchan for plotting 
 data = {}
-data['vdat']     =  vdat
+data['vdat'] = vdat
 data['vchans']   = vchans
 data['EQ_times'] = EQ_locations
 data['X']        = X

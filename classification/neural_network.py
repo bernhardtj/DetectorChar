@@ -22,86 +22,28 @@ from matplotlib.pyplot import cm
 np.random.seed(7)
 
 #read in data
-H1dat = sio.loadmat('Data/' + 'H1_SeismicBLRMS.mat')
-edat = np.loadtxt('Data/H1_earthquakes.txt')
+EQ_data = sio.loadmat('Data/EQ_info.mat')
+vdat = EQ_data['vdat']
+vchans = EQ_data['vchans']
+EQ_locations = EQ_data['EQ_locations']
+X = EQ_data['X']
+print(np.shape(X))
+Y = EQ_data['Y']
+Y = Y.T
+print(np.shape(Y))
+t = EQ_data['t']
 
-#read in earthquake channels
-cols = [6,12,18,24,30,36,42,48]
-vdat = np.array(H1dat['data'][0])
-vchans = np.array(H1dat['chans'][0])
-for i in cols:
-    add = np.array(H1dat['data'][i])
-    vdat = np.vstack((vdat, add))
-    vchans = np.append(vchans,H1dat['chans'][i])
-
-#shift the data
-t_shift = 10 #how many minutes to shift the data by
-for i in cols:
-    add = np.array(H1dat['data'][i])
-    for j in range(1, t_shift+1):        
-        add_shift = add[j:]
-        #print(np.shape(add_shift))
-        add_values = np.zeros((j,1))
-        add_shift = np.append(add_shift, add_values)
-        #print(np.shape(add_shift))
-        vdat = np.vstack((vdat, add_shift))
-        chan = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
-        vchans = np.append(vchans, chan)
-vdat = vdat[:,:43200-t_shift]
-
-#create list of earthquake times                                
-#convert time to gps time                      
-times = '2017-03-01 00:00:00'
-t = Time(times,format='iso',scale='utc')
-t_start= int(np.floor(t.gps/60)*60)
-dur_in_days= 30
-dur_in_minutes = dur_in_days*24*60
-dur = dur_in_minutes*60
-t_end = t_start+dur
-#use peak ground motion to determine which earthquakes are bigger  
-row, col = np.shape(edat)
-gdat = np.array([])
-for i in range(row):
-    point = edat[i][20]
-    gdat = np.append(gdat,point)
-gdat = gdat.T
-glq = np.percentile(gdat,65)
-print(glq)
-print(min(gdat))
-#use only earthquakes with signifigant ground motion                                                                                           
-row, col = np.shape(edat)
-etime = np.array([])
-for i in range(row):
-    if (edat[i][20] >= glq):
-        point = edat[i][5]
-        etime = np.append(etime,point)
-#use only earthqaukes that occur in March 2017 
-col = len(etime)
-etime_march = np.array([])
-for i in range(col):
-    if ((etime[i] >= t_start) and (etime[i] <= t_end)):
-        point = etime[i]
-        etime_march = np.append(etime_march,point)
-
-#assign X
-X = vdat.T
-#assign Y to 1 or 0 depending on wheter there is an earthquake
-xvals = np.arange(t_start,t_end-t_shift*60, 60)
-Y = np.array([])
-print(len(xvals))
-for x in xvals:
-    xlen = len(Y)
-    for j in etime_march:
-        if (x <= j+30*60 and x >= j-30*60):
-            Y = np.append(Y,1)
-    xlen2 = len(Y)
-    if xlen == xlen2:
-        Y  = np.append(Y,0)
+#print info about data
+size, points = np.shape(vdat)
+num = size
+print(' ')
+print(size)
+print(' ')
 
 #neural network
 optimizer = optimizers.Adam(lr = 1e-5)
 model = Sequential()
-model.add(Dense(89, input_shape = (89,), activation = 'elu'))
+model.add(Dense(size, input_shape = (size,), activation = 'elu'))
 model.add(Dropout(.1))
 model.add(Dense(9, activation = 'elu'))
 model.add(Dropout(.1))
@@ -120,16 +62,15 @@ Y_pred2 = Y_pred2.astype(int)
 Y_pred3 = np.array([])
 for i in Y_pred2:
     Y_pred3 = np.append(Y_pred3, i)
-Y_pred3 = Y_pred3.astype(int)
+Y_pred3 = np.astype(int)
 
-'''
+#Plot of data points 
 colors = np.array(['r', 'b', 'm', 'g'])
 labels = Y.T
 labels = labels.astype(int)
-xvals = np.arange(t_start,t_end,60)
-fig,axes  = plt.subplots(len(vdat), figsize=(40,4*len(vdat)))
-for ax, data, chan in zip(axes, vdat, vchans):
-    ax.scatter(xvals, data,c=colors[y_pred],edgecolor='',
+fig,axes  = plt.subplots(len(vdat[0:num]), figsize=(40,4*len(vdat[0:num])))
+for ax, data, chan in zip(axes, vdat[0:num], vchans):
+    ax.scatter(t, data,c=colors[Y_pred3],edgecolor='',
                s=3, label=r'$\mathrm{%s}$' % chan.replace('_','\_'))
     ax.set_yscale('log')
     ax.set_ylim(np.median(data)*0.1, max(data)*1.1)
@@ -140,7 +81,7 @@ for ax, data, chan in zip(axes, vdat, vchans):
     #    ax.axvline(x=etime_march[e])
 fig.tight_layout()
 try:
-    fig.savefig('/home/roxana.popescu/public_html/'+'NeuralNetworkComparison2.png')
+    fig.savefig('/home/roxana.popescu/public_html/'+'NeuralNetworkComparison3.png')
 except FileNotFoundError:
     fig.savefig('Figures/NeuralNetworkComparison2.png')
-'''
+

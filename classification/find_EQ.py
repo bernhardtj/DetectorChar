@@ -122,7 +122,7 @@ for i in t:
     xlen2 = len(Y)
     if xlen == xlen2:
         Y  = np.append(Y,0)
-print(len(Y))
+print(np.shape(Y))
 print(collections.Counter(Y))
 
 #saves data as mat file

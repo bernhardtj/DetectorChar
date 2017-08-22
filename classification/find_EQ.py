@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 '''
 Reads in earthquake channel data 
 Timeshifts the data
@@ -48,8 +50,8 @@ mpl.rc("savefig", dpi=100)
 H1dat = sio.loadmat('Data/' + 'H1_SeismicBLRMS.mat')
 edat  = np.loadtxt('Data/H1_earthquakes.txt')
 
-#read in earthquake channels
-cols   = [6,12,18,24,30,36,42,48]
+# read in earthquake channels
+cols   = [6, 12, 18, 24, 30, 36, 42, 48]
 vdat   = np.array(H1dat['data'][0])
 vchans = np.array(H1dat['chans'][0])
 for i in cols:
@@ -58,7 +60,8 @@ for i in cols:
     vchans = np.append(vchans,H1dat['chans'][i])
 
 # shift the data
-t_shift = 0 # how many minutes to shift the data by
+odat = vdat    # save original data before stacking
+t_shift = 30 # how many minutes to shift the data by
 if t_shift > 0:
     for i in cols:
         add = np.array(H1dat['data'][i])
@@ -71,7 +74,7 @@ if t_shift > 0:
             vdat = np.vstack((vdat, add_shift))
             chan = 'Time_Shift_' + str(j) + '_Min_EQ_Band_' + str(i)
             vchans = np.append(vchans, chan)
-    vdat = vdat[:,:43200-t_shift]
+    vdat = vdat[:,:43200-t_shift]             # FIXME: why is this a hardcoded # ??
 size, points = np.shape(vdat)
 
 print('The data has '+ str(size)+ ' columns and ' + str(points) + ' points')    
@@ -114,8 +117,8 @@ for i in range(col):
 
 # create list of earthquake times from peaks
 # find peaks in all three z channel directions
-widths  = np.arange(5, 140)   # range of widths in minutes
-min_snr = 5
+widths     = np.arange(5, 140)   # range of widths in minutes
+min_snr    = 5
 noise_perc = 15
 peaks1 = sig.find_peaks_cwt(vdat[2], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
@@ -159,14 +162,15 @@ for i in t:
         Y  = np.append(Y,0)
 
 # prints information about the shape of Y and the types of points in Y
-print('Shape of Y (the EQ labels) is ' + str(np.shape(Y)))
-print(collections.Counter(Y))
+if __debug__:
+    print('Shape of Y (the EQ labels) is ' + str(np.shape(Y)))
+    print(collections.Counter(Y))
 
 # saves data as mat file
 # saves vdat and vchan for plotting 
 data = {}
-data['vdat']      = vdat
-data['vchans']    = vchans
+data['odat']      = odat
+data['vchans']    = vchans           # why we need vdat and X ??
 data['EQ_times']  = EQ_locations
 data['X']         = X
 data['EQ_labels'] = Y

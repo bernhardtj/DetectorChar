@@ -57,8 +57,8 @@ for i in cols:
     vdat   = np.vstack((vdat, add))
     vchans = np.append(vchans,H1dat['chans'][i])
 
-#shift the data
-t_shift = 0 #how many minutes to shift the data by
+# shift the data
+t_shift = 0 # how many minutes to shift the data by
 if t_shift > 0:
     for i in cols:
         add = np.array(H1dat['data'][i])
@@ -73,9 +73,11 @@ if t_shift > 0:
             vchans = np.append(vchans, chan)
     vdat = vdat[:,:43200-t_shift]
 size, points = np.shape(vdat)
+
 print('The data has '+ str(size)+ ' columns and ' + str(points) + ' points')    
 
-#convert time to gps time                      
+
+# convert UTC time to GPS time                      
 times   = '2017-03-01 00:00:00'
 t       = Time(times,format='iso',scale='utc')
 t_start = int(np.floor(t.gps/60)*60)
@@ -163,17 +165,19 @@ print(collections.Counter(Y))
 # saves data as mat file
 # saves vdat and vchan for plotting 
 data = {}
-data['vdat'] = vdat
-data['vchans']   = vchans
-data['EQ_times'] = EQ_locations
-data['X']        = X
+data['vdat']      = vdat
+data['vchans']    = vchans
+data['EQ_times']  = EQ_locations
+data['X']         = X
 data['EQ_labels'] = Y
-data['t']        = t
-sio.savemat('Data/EQ_info.mat',data)
-
+data['t']         = t
+sio.savemat('Data/EQ_info.mat', data,
+                do_compression=True)
 
 #Plot earthquakes determined by peaks and recorded earthquakes
 '''
+print("Producing plot...")
+# Plot earthquakes determined by peaks
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40, 4*len(vdat)),
                              sharex=True)
 for ax, data, chan in zip(axes, vdat, vchans):

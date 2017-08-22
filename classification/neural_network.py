@@ -23,6 +23,7 @@ EQ_data  = sio.loadmat('Data/EQ_info.mat')
 vdat     = EQ_data['vdat']
 vchans   = EQ_data['vchans']
 EQ_times = EQ_data['EQ_times']
+EQ_times = EQ_times.reshape(49,1)
 X        = EQ_data['X']
 points, size  = np.shape(X)
 Y        = EQ_data['EQ_labels']
@@ -33,6 +34,7 @@ t        = EQ_data['t']
 print('size is ' + str(size))
 print('Shape of X is ' + str(np.shape(X)))
 print('Shape of Y is ' + str(np.shape(Y)))
+print(np.shape(EQ_times))
 
 # neural network
 optimizer = optimizers.Adam(lr = 1e-5)
@@ -82,8 +84,7 @@ for ax, data, chan in zip(axes, vdat[0:num], vchans):
     ax.grid(True, which='both')
     ax.legend()
     for e in range(len(EQ_times)):
-        print e
-        #ax.axvline(x = EQ_times[e])
+        ax.axvline(x = EQ_times[e], color = 'r')
 
 fig.tight_layout()
 
@@ -93,6 +94,6 @@ fig.savefig('Figures/NeuralNetworkComparison3.pdf')
 try:
     fig.savefig('/home/roxana.popescu/public_html/'+'NeuralNetworkComparison3.png')
 except:
+    fig.savefig('Figures/NeuralNetworkComparison3.png')
     print('  ')
     
-

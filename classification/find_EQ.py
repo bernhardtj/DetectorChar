@@ -49,8 +49,8 @@ for i in cols:
     vdat   = np.vstack((vdat, add))
     vchans = np.append(vchans,H1dat['chans'][i])
 
-#shift the data
-t_shift = 0 #how many minutes to shift the data by
+# shift the data
+t_shift = 0 # how many minutes to shift the data by
 if t_shift > 0:
     for i in cols:
         add = np.array(H1dat['data'][i])
@@ -65,9 +65,11 @@ if t_shift > 0:
             vchans = np.append(vchans, chan)
     vdat = vdat[:,:43200-t_shift]
 size, points = np.shape(vdat)
-print(points)    
+if __debug__:
+    print("points:")
+    print(points) 
 
-#convert time to gps time                      
+# convert UTC time to GPS time                      
 times   = '2017-03-01 00:00:00'
 t       = Time(times,format='iso',scale='utc')
 t_start = int(np.floor(t.gps/60)*60)
@@ -81,7 +83,7 @@ seconds_per_day = 24*60*60
 # Find peaks using scipy CWT
 if __debug__:
     print("This is something to do with peaks")
-   # print(peaks)
+    # print(peaks)
 
 
 # find peaks in all three z channel directions
@@ -97,7 +99,8 @@ peaks3 = sig.find_peaks_cwt(vdat[8], widths,
 peak_list = np.array([])
 
 # takes average time for earthquake times from three channels
-# that are within dtau minutes of each other 
+# that are within dtau minutes of each other
+dtau = 3
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
@@ -140,7 +143,8 @@ data['EQ_times'] = EQ_locations
 data['X']        = X
 data['EQ_labels'] = Y
 data['t']        = t
-sio.savemat('Data/EQ_info.mat',data)
+sio.savemat('Data/EQ_info.mat', data,
+                do_compression=True)
 
 #Plot earthquakes determined by peaks
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40, 4*len(vdat)),

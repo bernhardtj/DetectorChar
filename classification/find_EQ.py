@@ -86,6 +86,31 @@ t_end   = t_start + dur
 t       = np.arange(t_start,t_end-t_shift, 60)
 seconds_per_day = 24*60*60
 
+#create list of earthquake times from text file 
+#use peak ground motion to determine which earthquakes are bigger
+row, col = np.shape(edat)
+gdat = np.array([])
+for i in range(row):
+    point = edat[i][20]
+    gdat = np.append(gdat,point)
+gdat = gdat.T
+glq = np.percentile(gdat,65)
+#use only earthquakes with signifigant ground motion                          
+row, col = np.shape(edat)
+etime = np.array([])
+for i in range(row):
+    if (edat[i][20] >= glq):
+        point = edat[i][5]
+        etime = np.append(etime,point)
+#use only earthqaukes that occur in March 2017         
+col = len(etime)
+etime_march = np.array([])
+for i in range(col):
+    if ((etime[i] >= t_start) and (etime[i] <= t_end)):
+        point = etime[i]
+        etime_march = np.append(etime_march,point)
+
+# create list of earthquake times from peaks
 # find peaks in all three z channel directions
 widths  = np.arange(5, 140)   # range of widths in minutes
 min_snr = 5
@@ -146,7 +171,9 @@ data['EQ_labels'] = Y
 data['t']        = t
 sio.savemat('Data/EQ_info.mat',data)
 
-#Plot earthquakes determined by peaks
+
+#Plot earthquakes determined by peaks and recorded earthquakes
+'''
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40, 4*len(vdat)),
                              sharex=True)
 for ax, data, chan in zip(axes, vdat, vchans):
@@ -163,6 +190,9 @@ for ax, data, chan in zip(axes, vdat, vchans):
     for e in range(len(EQ_locations)):
         ax.axvline(x=(EQ_locations[e] - t[0])/seconds_per_day,
                        color = 'blue', alpha=0.3, linewidth=3)
+    for e in range(len(etime_march)):
+        ax.axvline(x=(etime_march[e] - t[0])/seconds_per_day,
+                       color = 'red', alpha=0.3, linewidth=3)
 
 plt.xlim((0, (t[-1]-t[0])/seconds_per_day))
 plt.title('Seismic BLRMS')
@@ -173,4 +203,4 @@ try:
     fig.savefig('/home/roxana.popescu/public_html/' + 'EQ_peaks_indicated.png')
 except: 
     print(' ')
-
+'''

@@ -75,6 +75,6 @@ for ax, data, chan in zip(axes, vdat[0:num], vchans):
 fig.tight_layout()
 try:
     fig.savefig('/home/roxana.popescu/public_html/'+'NeuralNetworkComparison3.png')
-except FileNotFoundError:
+except:
     fig.savefig('Figures/NeuralNetworkComparison3.png')
 

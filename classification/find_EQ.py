@@ -1,3 +1,11 @@
+'''
+Reads in earthquake channel data 
+Timeshifts the data
+Creates list of earthquake times based on peaks
+Creates X and Y arrays for neural network
+Saves arrays to mat file
+'''
+
 from __future__ import division
 
 import numpy as np
@@ -10,7 +18,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import scipy.signal as sig
 
-plt.style.use('ggplot')
+#plt.style.use('ggplot')
 mpl.rcParams.update({
     'axes.grid': True,
     'axes.titlesize': 'medium',
@@ -65,9 +73,9 @@ if t_shift > 0:
             vchans = np.append(vchans, chan)
     vdat = vdat[:,:43200-t_shift]
 size, points = np.shape(vdat)
-if __debug__:
-    print("points:")
-    print(points) 
+
+print('The data has '+ str(size)+ ' columns and ' + str(points) + ' points')    
+
 
 # convert UTC time to GPS time                      
 times   = '2017-03-01 00:00:00'
@@ -80,11 +88,6 @@ t_end   = t_start + dur
 t       = np.arange(t_start,t_end-t_shift, 60)
 seconds_per_day = 24*60*60
 
-# Find peaks using scipy CWT
-if __debug__:
-    print("This is something to do with peaks")
-    # print(peaks)
-
 
 # find peaks in all three z channel directions
 widths  = np.arange(5, 140)   # range of widths in minutes
@@ -96,11 +99,11 @@ peaks2 = sig.find_peaks_cwt(vdat[5], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
 peaks3 = sig.find_peaks_cwt(vdat[8], widths,
                                 min_snr = min_snr, noise_perc=noise_perc)
-peak_list = np.array([])
 
 # takes average time for earthquake times from three channels
-# that are within dtau minutes of each other
+# that are within dtau minutes of each other 
 dtau = 3
+peak_list = np.array([])
 for i in peaks1:
     for j in peaks2:
         for k in peaks3:
@@ -117,36 +120,38 @@ for i in peak_list:
 X = vdat.T
 if __debug__:
     print('Shape of X is ' + str(np.shape(X)))
+
 # assign Y to 1 or 0 depending on whether there is an earthquake
 Y = np.array([])
+eq_time = 5
 for i in t:
     xlen = len(Y)
     for j in EQ_locations:
-        if (j-5 <= i <= j+5):
+        if (j-eq_time <= i <= j+eq_time):
             Y = np.append(Y,1)
             break
     xlen2 = len(Y)
     if xlen == xlen2:
         Y  = np.append(Y,0)
 
-if __debug__:
-    print('Here are some mysterious uncommented debug statements:')
-    print(len(Y))
-    print(collections.Counter(Y))
+#prints information about the shape of Y and the types of points in Y
+print('Shape if Y is ' + str(np.shape(Y)))
+print(collections.Counter(Y))
 
 # saves data as mat file
-# why do we save X and vdat ???
+# saves vdat and vchan for plotting 
 data = {}
-data['vdat']     =  vdat
-data['vchans']   = vchans
-data['EQ_times'] = EQ_locations
-data['X']        = X
+data['vdat']      = vdat
+data['vchans']    = vchans
+data['EQ_times']  = EQ_locations
+data['X']         = X
 data['EQ_labels'] = Y
-data['t']        = t
+data['t']         = t
 sio.savemat('Data/EQ_info.mat', data,
                 do_compression=True)
 
-#Plot earthquakes determined by peaks
+print("Producing plot...")
+# Plot earthquakes determined by peaks
 fig,axes  = plt.subplots(nrows=len(vdat), figsize=(40, 4*len(vdat)),
                              sharex=True)
 for ax, data, chan in zip(axes, vdat, vchans):

@@ -119,10 +119,10 @@ for i in peak_list:
 # assign X
 X = vdat.T
 if __debug__:
-    print('Shape of X is ' + str(np.shape(X)))
+    print('Shape of the BLRMS data is ' + str(np.shape(X)))
 
 # assign Y to 1 or 0 depending on whether there is an earthquake
-Y = np.array([])
+Y = np.array([])   # this is the array of labels
 eq_time = 5
 for i in t:
     xlen = len(Y)
@@ -134,8 +134,8 @@ for i in t:
     if xlen == xlen2:
         Y  = np.append(Y,0)
 
-#prints information about the shape of Y and the types of points in Y
-print('Shape if Y is ' + str(np.shape(Y)))
+# prints information about the shape of Y and the types of points in Y
+print('Shape of Y (the EQ labels) is ' + str(np.shape(Y)))
 print(collections.Counter(Y))
 
 # saves data as mat file
@@ -148,7 +148,7 @@ data['X']         = X
 data['EQ_labels'] = Y
 data['t']         = t
 sio.savemat('Data/EQ_info.mat', data,
-                do_compression=True)
+                do_compression = True)
 
 print("Producing plot...")
 # Plot earthquakes determined by peaks

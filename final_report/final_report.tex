@@ -1,0 +1,135 @@
+\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
+            citecolor=red,urlcolor=magenta]{ligodoc}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{listings}
+%\usepackage{minted}
+
+\ligodccnumber{T}{17}{00198}{}{v1}% \ligodistribution{AIC, ISC}
+
+\setlength\parindent{24pt}
+
+\title{Online Detector Characterization using Neural Networks}
+
+\author{Roxana Popescu}
+
+\begin{document}
+
+\section{Introduction} 
+
+\indent
+
+\par The data obained from LIGO has noise that comes from many sources. In order to be able to better distinguish signals from the noise, it is important to characterize the type of noise observed. Machine learning algorithms can be used to look for patterns within the data and to classify the data into different categories.
+
+\par There are many sensors at the LIGO detectors that measure sources of noise. For example, there are several stations at each LIGO detector that measure seismic noise in different frequency channels in each of the X,Y, and Z directions. Within the data, there are different types of seismic noise such as earthquakes and anthropogenic noise.  
+
+\par In order to sort data, machine learning algorithms can use one of two approaches: classification or clustering. Classification algorithms search the data and sort the data into already defined categories. Clustering algorithms look for relationships within the data to create categories into which the data is sorted. Classification algorithms are part of supervised learning since the computer determines the structure of the data from data that is already provided. Clustering algorithms are part of unsupervised learning since the computer determines the structure of the data without any previous information. Clustering algorithms can be used to characterize the noise by identifying common characteristics within the noise and the clustering algorithms can further help with classification. \cite{Citation1}
+
+\par Neural networks can be used to find relationships between the inputed data by using hidden layers of connections within the data. Recurrent neural networks are neural networks that use loops within them so that previous information can be retained. \cite{Citation1}
+
+\par The aim of this project was to characterize different sources of noise from LIGO using machine learning algorithms. First we tested clustering algorithms on seismic data, and then implemented a neural network to characterize the seismic noise data. 
+
+\section{Clustering Algorithms}
+
+\subsection{K-means Clustering}
+
+\indent
+
+\par The k-means clustering algorithm creates clusters by separating data points into k number of groups. The value of k is inputted into the algorithm. The clusters are determined by minimizing the inertia, or the within-cluster sum-of-squares. The inertia is a measure of how coherent the clusters are. By minimizing the intertia, the algorithm tries to minimize the difference between the mean value of a cluster and the values of points in the cluster. If a set of n samples x are inputted, the algorithm divides the samples into k clusters C. Each cluster is described by its mean \(u_j\), or centroid. The interia of a cluster is caluclated by the following expression:
+
+\[\sum_{i=0}^{n} \min_{\mu_j \in  C}(\|x_j-\mu_i\|^2)\]
+
+\par The inertia is not normalized, but lower values are better and zero is the optimum value. The inertia assumes that the clusters are convex and isotropic, and would not work well to cluster irregular or elongated clusters. \cite{Citation2}\cite{Citation3} 
+
+\subsection{DBSCAN Clustering}
+
+\indent
+
+\par The DBSCAN clustering algorithm creates clusters out of areas in the data of higher density. Unlike kmeans, it does not consider clusters to have any particular shapes, and the algorithm determines the number of clusters based on inputted parameters. Core samples are points that are in areas of high densities. The algorithm creates clusters around core samples so that the clusters consist of core samples, and non-core samples that are close to the core samples. The core samples are determined by two input parameters, the minimum samples and a specified distance, $\varepsilon$. A point is in the $\varepsilon$-neighborhood if the distance d from a point p to a point q is within a radius of of $\varepsilon$. High density areas have the minimum sample of values within the $\varepsilon$-neighborhood. By increasing the number of minimum samples, and decreasing the distance, $\varepsilon$, a cluster's density is increased. \cite{Citation2}\cite{Citation4}
+
+\subsection{Agglomerative Clustering}
+
+\subsection{Birch Clustering}
+
+\subsection{Evaluating Clustering Algorithms}
+
+\subsubsection{Calinsky Harabaz Index}
+
+\indent
+
+\par The Calinsky-Harabaz index is a method used to evaluate how well clustering algorithms work, that does not require input of external data. The Calinsky-Harabaz score is calculated by finding the ratio of the between-clusters dispersion mean to the within-cluster dispersion mean. This ratio is calculated as follows:
+
+\[s(k) = \frac{Tr(B_k)}{Tr(W_k)}\times\frac{N-k}{k-1}\]
+
+\par Where k is the number of clusters, \(B_k\) is the between group dispersion matrix, \(W_k\) is the within group dispersion matrix and N is the number of data points. \(W_k\) and  \(B_k\) are defined by:
+
+\[W_k = \sum_{q=1}^{k} \sum_{x \in C_q} (x-c_q)(x-c_q)^T\]
+
+\[B_k = \sum_{q} n_q (c_q-c)(c_q-c)^T\]
+
+\par Where \(C_q\) is the number of set points in cluster q, \(c_q\) is the center of cluster q, c is the center of the clusters, and \(n_q\) is the number of points in cluster q. \cite{Citation2} 
+
+\subsubsection{Comparing Clusters to Earthquake Times}
+
+\indent 
+
+\par Another way to evaluate how well the clustering algorithms work is to add up the cluster labels that occur five  minutes before and after an earthquake Rayleigh wave arrives, to add up the total amount of cluster labels, and for each individual cluster to divide the number of cluster labels that appear near the earthquake by the total number of cluster labels. For each cluster k, the earthquake comparison score, E(k) can be determined by:
+
+\[E(k) = \frac{N_e}{N_t}\]
+
+Where \(N_e\) is the number of cluster labels five minutes before and after an earthquake, and \(N_t\) is the total number of cluster labels. If a cluster corresponds to the presence of an earthquake then it will have a high percentage of its cluster labels present near an earthquake.  
+
+\section{Clustering Results}
+
+\indent
+
+\par In this section I will present the results of the clustering algorithms in tables as well as results from shifted data entered into clustering algorithms. I will explain how I shifted the data. I will also include plots of some clusting algorithms.
+
+\section{Neural Network Results}
+
+\indent
+
+\par Describe the neural network implemented and the results. 
+
+\begin{thebibliography}{9}
+      
+	\bibitem{Citation1}
+	  Aurelien Geron,
+	  \emph{Hands-On Machine Learning with Scikit-Learn and TensorFlow}.
+	  O'Reilly Media Inc., (2017).    
+        
+        \bibitem{Citation2}
+          \url{http://scikit-learn.org/stable/modules/clustering.html}
+
+        \bibitem{Citation3}
+          David Arthur, Sergei Vassilvitskii,
+          \emph{k-means++: The Advantages of Careful Seeding}.
+          Proceedings of the Eighteenth Annual ACM-SIAM Symposium on Discrete Algorithms, Society of Industrial and Applied Mathematics, (2007).
+
+        \bibitem{Citation4}
+          Martin Ester, Hans-Peter Kriegel, Jorg Sander, Xiaowei Xu,
+          \emph{A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise}.
+          Proceedings of the 2nd International Conference on Knowledge Discovery and Data Mining, (1996).
+
+        \bibitem{Citation5}
+          Greg Hammerly, Charles Elkan,
+          \emph{Learning the k in k-means}
+          Proceedings of the Neural Information Processing Systems Conference, (2003).
+          
+\end{thebibliography}
+
+\appendix
+\section{Script for Evaluating Clustering Algorithms}
+
+\section{Script for Neural Network}
+
+\end{document} 

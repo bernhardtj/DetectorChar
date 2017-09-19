@@ -1,0 +1,56 @@
+\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
+            citecolor=red,urlcolor=magenta]{ligodoc}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage{listings}
+
+\ligodccnumber{T}{17}{00198}{}{v1}% \ligodistribution{AIC, ISC}
+
+\setlength\parindent{24pt}
+
+\title{Online Detector Characterization using Neural Networks}
+
+\author{Roxana Popescu}
+
+\begin{document}
+
+\begin{table}[h!]
+\centering
+ \begin{tabular}{| m{3.5vm} m{3.5cm} m{3.5cm} m{3.5cm}|}
+ \hline
+ Number of Clusters & Calinsky-Harabaz Score & Cluster of Earthquake Score & Earthquake Score\\ [0.5ex]
+ \hline\hline
+ 2 & 40172.1 & 1 & 0.0344828
+ \hline
+ 3 & 37282.1 & 1 & 0.037037
+ \hline
+ 4 & 43960 & 1 & 0.0769231
+ \hline
+ 5 & 44224.7 & 4 & 0.0833333
+ \hline
+ 6 & 45616.1 & 3 & 0.0833333
+ \hline
+ 7 & 46338.4 & 3 & 0.0833333
+ \hline
+ 8 & 46348.9 & 7 & 0.111111
+ \hline
+ 9 & 46095.1 & 1 & 0.111111
+ \hline
+ 10 & 46746.5 & 6 & 0.125
+ \hline
+ \hline
+ \end{tabular}
+ \caption{Results of kmeans clustering}
+ \label{Table 1}
+\end{table}
+
+\end{document}

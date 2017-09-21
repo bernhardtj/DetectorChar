@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 .ipynb_checkpoints
 
+# Latex
+*.out
+*.log
+*.aux
+*~
+
+
 # C extensions
 *.so
 

@@ -19,29 +19,85 @@
 
 \begin{document}
 
-% How long should the plan be, and what should be included?
 % A research plan of two or three pages, carefully thought out and precisely worded, should be sufficient to make all the important points. Concerning structure and content: start out with the sections indicated below and try to answer the questions provided in each part. When you have this material developed, you may be able to reorganize it so that it flows more logically while covering the same ground.
 
-\section{Introduction} % Introduction/Background
+\section{Introduction}
 % What is the general technical area in which you will be working? What is the problem that you are trying to solve, and how did the problem arise? Why is its solution interesting or worthwhile? What is the status of related research by your mentor or by the group that you will be joining, and what will be the contribution and significance of your effort if it is successful?
-% 
-% You will probably have to ask your mentor a lot of questions and read some or all of the reference material provided for you in order to answer these questions and others below.
 
+To help identify and characterize environment-based noise, a LIGO detector has a Physics Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility.
+This is used for a multitude of purposes, including the data quality (DQ) vector used for time segment vetoing, based on direct correlation between PEM and DARM.
+Ideally, PEM should also inform very precise mechanisms for the shielding of the detector from the environment, but this is limited by the amount of detail PEM can provide about the exact nature of the coupling of the noise to DARM.
+While some noise manifests simply, the correlations between PEM data and noise are largely not immediately obvious, due to higher-order coupling mechanisms which include up- or down-conversion in the frequency domain.
+Without a method of revealing these possibly more complex correlations, the LIGO PEM system is rendered essentially useless.
+
+If frequency-domain clusters can be identified in the PEM and DARM, then intelligible noise correlations may be extracted. For initial sanity purposes, a previous LIGO SURF student has evaluated several data clustering algorithms with respect to their ability to properly sort out frequency elements of PEM seismometer signals caused by specific earthquake events\cite{roxana}.
+Both the \texttt{k-means} algorithm, which aims to make clusters with low standard deviation, and the \texttt{dB-scan} algorithm, which minimizes overall inter-point distance in clusters, were evaluated using multiple methods, including the Calinsky-Harabaz  index and direct comparison to earthquake times via time labeling of points, ultimately showing poor earthquake identification.
+A long short-term memory (LSTM) recurrent neural network (RNN) seemed to work much better, but due to small input sample size, this solution may have been be plagued by over-fitting.
+Thus, it is imperative that a more robust frequency clustering mechanism be designed for the PEM system.
 
 \section{Objectives}
 % What do you aim to accomplish in your project? What will you measure, and under what conditions; or, what will you calculate, model, or simulate; or what will you design, and what are the requirements; or what will you build or test? What is your starting point? What are your initial assumptions or conditions? What will be the result or product of a successful outcome for your project? What are the criteria for project completion or for success? (In other words, how will you know when you have accomplished what you set out to do?)
-
+\begin{itemize}
+\item
+As a primary goal, \textbf{algorithms or clustering approaches which correctly identify labeled noise events need to be found} (the attempted work of the aforementioned previous student).
+As every algorithm has inbuilt assumptions about the dataset it is applied to, the results of an algorithm performance test on labeled data will yield information about the structure of the data.
+The general temporal nonstationarity of the DARM noise will need to be accounted for by varying testing time windows.
+\item
+The secondary goal is to \textbf{use the uncovered structure (or lack thereof) to inform a clustering approach designed to be applicable on partially labeled or unlabeled data}.
+This is where the ``detector characterization tool'' that this project aims to advance will be functional---achievement of this goal means ability to reveal new and previously unknown coupling pathways between PEM and DARM, and successful information of physical detector upgrades.
+\end{itemize}
 
 \section{Approach}
 % Specifically, how will you reach your objective or produce your desired final product? What are the principal steps or milestones along the path? How long will each take? What steps promise to be the most difficult, and how will you overcome the difficulties? What equipment or other resources will you need? Which of these are inherited, and which will you have to make or procure? With what other people or groups will you be collaborating? Will completion of your project depend on results from other people in related projects? (That question may be especially pertinent for team projects.)
 
+Initially, a program will be written to take the spectral power of any PEM channel, in the form of band-limited RMS (BLRMS), possibly inspired by the recent work of Gabriele Vajente\cite{vajente}.
+
+To reach the first objective, a modular \texttt{python} testing suite will be written to probe the structure of the multidimensional frequency-domain sensor data.
+This will strategically implement \texttt{scikit-learn} clustering algorithms and classifiers with different optimal regimes of function or working assumptions and evaluate them using point labeling. 
+This will require, additionally to researching clustering or unsupervised classification algorithms, thinking of as many variables which may affect the data structure and intelligently testing them. 
+Optimizations will need to be considered so that run times are reasonable.
+
+The program tackling the second objective will likely have a form dependent on the results of the first objective.
+It is unlikely that a certain algorithm or technique outperforms the rest for all types of sensory data, so the final program will match techniques to the regimes that they work in, and contain a modular composition similar to the first.
+New clustering strategies may need to be investigated and used to combine or simplify these regimes, based on qualitative and conceptual results found reaching first objective.
+
 
 \section{Project Schedule}
 % Preparing a schedule of the principal activities and events is a good way of showing the readers that you have taken a systematic approach to planning your work.
+\paragraph{Before Arrival}
+\begin{itemize}
+\item Research algorithms to use
+\item Continue familiarizing with \texttt{scikit-learn} by adapting old code for beamtube accelerometers
+\end{itemize}
+\paragraph{Week 1-2}
+\begin{itemize}
+\item Familiarize with types of PEM data that can have labeled events
+\item Complete the algorithm testing suite
+\end{itemize}
+\paragraph{Week 3-4}
+\begin{itemize}
+\item Develop ways to plug channels into the suite
+\item Run suite on determined variety of channel combinations and regimes
+\end{itemize}
+\paragraph{Week 5-6}
+\begin{itemize}
+\item Examine results, decide next steps
+\item Research new algorithms
+\item Adapt initial codebase for application
+\end{itemize}
+\paragraph{Week 7-8}
+\begin{itemize}
+\item Try to reveal new PEM-DARM coupling mechanisms and propose/implement solutions
+\end{itemize}
+\paragraph{Week 9-10}
+\begin{itemize}
+\item Finish up final analysis and writing final report.
+\end{itemize}
 
-
-% References
+\begin{thebibliography}{2}
+\bibitem{roxana} LIGO Document T1700198-v1
+\bibitem{vajente} aLIGO LLO Logbook entry 45374 by Gabriele Vajente
+\end{thebibliography}
 % List all pertinent papers or reports that you have consulted to prepare your plan. Include remarks or suggestions from your prospective supervisor, from graduate students, or from other people with whom you have talked.
 
 \end{document}
- 

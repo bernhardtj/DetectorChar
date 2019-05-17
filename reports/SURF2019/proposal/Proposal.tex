@@ -15,7 +15,7 @@
 
 \title{Data Clustering Techniques for the Correlation of Environmental Noise to Signals in LIGO Detectors}
 
-\author{Jacob Bernhardt}
+\author{Jacob Bernhardt, Anamaria Effler, Rana Adhikari}
 
 \begin{document}
 
@@ -25,18 +25,28 @@
 % What is the general technical area in which you will be working? What is the problem that you are trying to solve, and how did the problem arise? Why is its solution interesting or worthwhile? What is the status of related research by your mentor or by the group that you will be joining, and what will be the contribution and significance of your effort if it is successful?
 The LIGO project uses laser interferometry to measure gravitational waves (GWs).
 When a GW passes, it creates a length difference between the LIGO detector's two orthogonal optical cavities, known as DARM.
-Due to amplitude scales of these GWs, the current 4-km detectors have to operate at a very high sensitivity; for a 100hz signal, a variation of $2\times 10^{-20}$ m/hz$^{1/2}$ can be recorded.
+Due to amplitude scales of these GWs, the current 4-km detectors have to operate at a very high sensitivity; for a 100 hz signal, a variation in spectral density of $2\times 10^{-20}$ m/hz$^{1/2}$ can be recorded.
 The design of 4-km LIGO is thus heavily focused on treatment of noise.
 
 To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility.
 This is used for a multitude of purposes, including the data quality report (DQR) used for time segment vetoing, based on direct coherence of PEM channels to DARM.
-Supplementing coincidence analysis between the two detectors, DQR prevents gravitational wave-like noise transients from being falsely categorized as events.
-While vetoing and determining signal quality is useful, detector livetime can be increased by adding mechanical, electrical, or software-based components that directly remove environmental noise from the gravitational wave channel.
-While the noise that directly couples into the detector has been found by basic coherence and addressed, there are many noise sources that up- or down-convert when coupling.
+Supplementing coincidence analysis between the two detectors, DQR prevents GW-like noise transients from being falsely categorized as events.
+While vetoing and determining signal quality is useful, detector livetime can be increased by figuring out how to decouple environmental noise from DARM.
+Directly coupling noise, found by basic coherence, has been already addressed, but the complexity of the detector causes many noise sources to up- or down-convert.
 These require some more careful statistical correlation to identify, and are generally not well understood.
 \begin{figure}
 \includegraphics[width=\textwidth]{llopem.png}
-\caption{Schematic PEM map at the LIGO Livingston Observatory. Shaded areas are in vacuum.}
+\caption{Schematic PEM map at the LIGO Livingston Observatory (L1). Shaded areas are in vacuum.}
+\end{figure}
+\begin{figure}
+  \begin{minipage}[c]{0.67\textwidth}
+  \begin{tabular}{c}
+  \includegraphics[width=\textwidth]{L1-LOCKED_216737_RANGE-1240272018-86400.png}   \\  \includegraphics[width=\textwidth]{L1-LOCKED_216737_RANGE-1240358418-86400.png}
+  \end{tabular}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.3\textwidth}
+    \caption{Detector range at L1 seems to consistently reduce during the day ($\sim$6am-5pm CST). For large BBH in these plots, the reduction is about 300 Mpc. The source of this has been pinpointed to the Y end station, but the mechanism isn't fully clear.}
+  \end{minipage}
 \end{figure}
 
 Noise sources appear in a range of different frequency bands, so separating noise sources out of a signal is a clustering problem in frequency space.
@@ -68,7 +78,7 @@ This will require, additionally to researching clustering or unsupervised classi
 Optimizations will need to be considered so that run times are reasonable.
 
 The program tackling the second objective will use working clustering approaches identified in the first objective to find new noise correlations.
-In the event that no individual algorithm or technique outperforms the rest for all types of sensory data, so the final program will use the modular programming environment created for the testing suite to match techniques to the regimes that they work in.
+In the event that no individual algorithm or technique outperforms the rest for all types of sensory data, the final program will use the modular programming environment created for the testing suite to match techniques to the regimes that they work in.
 The structure of the input data as determined by the first objective, including the dimensionality probed by the extra variables, may lend itself to additional algorithms that can be used to combine the target regimes.
 To this end, extra algorithm research will be conducted with specific consideration of the solved structure.
 
@@ -113,4 +123,3 @@ To this end, extra algorithm research will be conducted with specific considerat
 % List all pertinent papers or reports that you have consulted to prepare your plan. Include remarks or suggestions from your prospective supervisor, from graduate students, or from other people with whom you have talked.
 
 \end{document}
- 

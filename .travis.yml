@@ -1,0 +1,16 @@
+install:
+- sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+- sudo apt-get install latexmk
+- sudo apt-get install texlive-science
+script:
+- cd reports/SURF2019/proposal && latexmk -f -pdf Proposal.tex && latexmk -c
+deploy:
+  provider: pages
+  github_token: "$GITHUB_TOKEN"
+  skip_cleanup: true
+  keep_history: true
+  on:
+    branch: preparatory-work
+env:
+  global:
+    secure: uM/N57PA9wtSAzu5mlPM/z8SLoFXWgqs+XMU0rqaCZarbb+OBTQeI62HsPgsfKmbrhkCRC7p+4rP/1So3PiMr9o4ITxju/2fkUyLv7UZM1rtQaM5K7RvEnzP7M1TYWKAgVBpLNTfky91N9dhUScuCbvhjeqIttv74VWtUWsvcBj2GA8Q6APSLo5BU7abYbjRKNGnxYOrMkCAfRRvU1kYewMR1jKqKU0vWR0VxqaKEI7RcfSh0LnnKo31mQDWZB4g/XjyMVEX4OLps9NUHHbjE1cmXLI0YaoWRWvpqctwgQyXmR/lrzHXn2Lz7xAVAFZ0njdT7S2H63L9QkCREqkVt4qqWdTeFmCJEMpE3QUocXn/D5qd0PORw9SZjesQquBnU++87e+edS9f+ltjr/lE7d+B4lkljzitMFnU2W4tNlKrO8flickUzLeV1xHfH5RY7zRnlcSkMgL5qc4JYgXVIoo58opGrWNE25YsRZmPg96lpTw8T0HYI5Q1wyDhBMv9Dah9JjYYu+eD84A9QQ1CqbwJmEQeT+TaWWmADyF+cabu2MMmop9n+sgf5TKjFzcMZC1sNAbtZJSC9cdwEtr0qu6evASe+3PPuxouTSUwTTyF0QjJ1I1t8ZQUB08WHqtxGt5aqmeIJe4Cl/ErVO06dZsK0pKL49TiQTwS9vPga7I=

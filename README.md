@@ -1,6 +1,12 @@
 # DetectorChar
 Detector Characterization tools.
 
+## Noise Clustering
+
+### [`travis`](https://gist.github.com/anchal-physics/c219a617293e9098b726bcb33692825f)`/ LaTeX` compilation [![Build Status](https://travis-ci.com/CaltechExperimentalGravity/DetectorChar.svg?token=uERMqbPZoxpPqfDGvg9v&branch=preparatory-work)](https://travis-ci.com/CaltechExperimentalGravity/DetectorChar)
+
+- [Proposal](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/reports/SURF2019/proposal/Proposal.pdf) 
+
 ## Summary pages
 
 ### Main scripts & condor

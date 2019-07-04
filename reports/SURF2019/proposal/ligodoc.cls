@@ -1,1 +1,0 @@
-../../ligodoc.cls

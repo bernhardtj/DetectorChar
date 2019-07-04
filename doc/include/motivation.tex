@@ -1,32 +1,8 @@
-\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
-            citecolor=red,urlcolor=magenta]{ligodoc}
-
-\usepackage{graphicx}
-\usepackage{amssymb}
-\usepackage{amsmath}
-\usepackage{longtable}
-\usepackage{rotating}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{fancyhdr}
-\usepackage{subfigure}
-\usepackage{hyperref}
-\ligodccnumber{T}{19}{00287}{}{v1}% \ligodistribution{AIC, ISC}
-
-
-\title{Data Clustering Techniques for the Correlation of Environmental Noise to Signals in LIGO Detectors}
-
-\author{Jacob Bernhardt, Anamaria Effler, Rana Adhikari}
-
-\begin{document}
-
-% A research plan of two or three pages, carefully thought out and precisely worded, should be sufficient to make all the important points. Concerning structure and content: start out with the sections indicated below and try to answer the questions provided in each part. When you have this material developed, you may be able to reorganize it so that it flows more logically while covering the same ground.
-
 \section{Introduction}
-% What is the general technical area in which you will be working? What is the problem that you are trying to solve, and how did the problem arise? Why is its solution interesting or worthwhile? What is the status of related research by your mentor or by the group that you will be joining, and what will be the contribution and significance of your effort if it is successful?
 The LIGO project uses laser interferometry to measure gravitational waves (GWs).
-When a GW passes, it creates a length difference between the LIGO detector's two orthogonal optical cavities, known as DARM.
-Due to amplitude scales of these GWs, the current 4-km detectors have to operate at a very high sensitivity; for a 100 hz signal, a variation in spectral density of $2\times 10^{-20}$ m/hz$^{1/2}$ can be recorded.
-The design of 4-km LIGO is thus heavily focused on treatment of noise.
+LIGO interferometers transduce their relative arm length differences caused by GWs to a signal composed of optical power, known as DARM.
+Due to amplitude scales of these GWs, these detectors have to operate at a very high sensitivity; for a 100 Hz signal, an amplitude spectral density (ASD) length difference of $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ can be recorded.
+The design of earthbound LIGO is thus heavily focused on treatment of environmental noise.
 
 To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility.
 This is used for a multitude of purposes, including the data quality report (DQR) used for time segment vetoing, based on direct coherence of PEM channels to DARM.
@@ -35,13 +11,13 @@ While vetoing and determining signal quality is useful, detector livetime can be
 Directly coupling noise, found by basic coherence, has been already addressed, but the complexity of the detector causes many noise sources to up- or down-convert.
 These require some more careful statistical correlation to identify, and are generally not well understood.
 \begin{figure}
-\includegraphics[width=\textwidth]{llopem.png}
+\includegraphics[width=\textwidth]{assets/llopem.png}
 \caption{Schematic PEM map at the LIGO Livingston Observatory (L1). Shaded areas are in vacuum.}
 \end{figure}
 \begin{figure}
   \begin{minipage}[c]{0.67\textwidth}
   \begin{tabular}{c}
-  \includegraphics[width=\textwidth]{L1-LOCKED_216737_RANGE-1240272018-86400.png}   \\  \includegraphics[width=\textwidth]{L1-LOCKED_216737_RANGE-1240358418-86400.png}
+  \includegraphics[width=\textwidth]{assets/L1-LOCKED_216737_RANGE-1240272018-86400.png}   \\  \includegraphics[width=\textwidth]{assets/L1-LOCKED_216737_RANGE-1240358418-86400.png}
   \end{tabular}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.3\textwidth}
@@ -51,7 +27,7 @@ These require some more careful statistical correlation to identify, and are gen
 
 Noise sources appear in a range of different frequency bands, so separating noise sources out of a signal is a clustering problem in frequency space.
 A previous LIGO SURF student has evaluated several data clustering algorithms with respect to their ability to properly sort out frequency elements of seismometer signals caused by specific earthquake events\cite{roxana}.
-Both the \texttt{k-means} algorithm, which aims to make clusters with low standard deviation, and the \texttt{dB-scan} algorithm, which minimizes overall inter-point distance in clusters, were evaluated using multiple methods, including the Calinsky-Harabaz  index and direct comparison to earthquake times via time labeling of points, ultimately showing poor earthquake identification.
+Both the $k$-means algorithm, which aims to make clusters with low standard deviation, and the DBSCAN algorithm, which minimizes overall inter-point distance in clusters, were evaluated using multiple methods, including the Calinsky-Harabaz  index and direct comparison to earthquake times via time labeling of points, ultimately showing poor earthquake identification.
 A long short-term memory (LSTM) recurrent neural network (RNN) seemed to work much better, but due to small input sample size, this solution may have been be plagued by over-fitting.
 Thus, it is imperative that a more robust frequency clustering mechanism be designed for the PEM system.
 
@@ -81,45 +57,3 @@ The program tackling the second objective will use working clustering approaches
 In the event that no individual algorithm or technique outperforms the rest for all types of sensory data, the final program will use the modular programming environment created for the testing suite to match techniques to the regimes that they work in.
 The structure of the input data as determined by the first objective, including the dimensionality probed by the extra variables, may lend itself to additional algorithms that can be used to combine the target regimes.
 To this end, extra algorithm research will be conducted with specific consideration of the solved structure.
-
-
-\section{Project Schedule}
-% Preparing a schedule of the principal activities and events is a good way of showing the readers that you have taken a systematic approach to planning your work.
-\paragraph{Before Arrival}
-\begin{itemize}
-\item Research algorithms to use
-\item Develop glitch-resistant BLRMS-making code
-\item Continue familiarizing with \texttt{scikit-learn} by adapting old clustering code for beamtube accelerometers
-\end{itemize}
-\paragraph{Week 1-2}
-\begin{itemize}
-\item Familiarize with types of PEM data that can have labeled events
-\item Complete the algorithm testing suite
-\end{itemize}
-\paragraph{Week 3-4}
-\begin{itemize}
-\item Develop ways to plug channels into the suite
-\item Run suite on determined variety of channel combinations and regimes
-\end{itemize}
-\paragraph{Week 5-6}
-\begin{itemize}
-\item Examine results, decide next steps
-\item Research new algorithms
-\item Adapt initial codebase for application
-\end{itemize}
-\paragraph{Week 7-8}
-\begin{itemize}
-\item Try to reveal new PEM-DARM coupling mechanisms and propose/implement solutions
-\end{itemize}
-\paragraph{Week 9-10}
-\begin{itemize}
-\item Finish up final analysis and writing final report.
-\end{itemize}
-
-\begin{thebibliography}{2}
-\bibitem{roxana} LIGO Document T1700198-v1
-\bibitem{vajente} aLIGO LLO Logbook entry 45374 by Gabriele Vajente
-\end{thebibliography}
-% List all pertinent papers or reports that you have consulted to prepare your plan. Include remarks or suggestions from your prospective supervisor, from graduate students, or from other people with whom you have talked.
-
-\end{document}

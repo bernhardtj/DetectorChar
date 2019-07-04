@@ -3,7 +3,7 @@ install:
 - sudo apt-get install latexmk
 - sudo apt-get install texlive-science
 script:
-- cd doc && latexmk -f -pdf proposal.tex && latexmk -f -pdf interim1.tex && latexmk -c
+- cd doc && bash -c 'ls -1 *.tex | while read line; do latexmk -f -pdf $line; done; latexmk -c'
 deploy:
   provider: pages
   github_token: "$GITHUB_TOKEN"

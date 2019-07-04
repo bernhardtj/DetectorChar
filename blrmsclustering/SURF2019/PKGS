@@ -1,0 +1,11 @@
+astropy
+keras
+jupyter
+matplotlib
+numpy
+scikit-learn
+scipy
+theano
+# conda-forge
+gwpy
+python-nds2-client

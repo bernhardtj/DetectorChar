@@ -1,7 +1,7 @@
 \section{Introduction}
 The LIGO project uses laser interferometry to measure gravitational waves (GWs).
 LIGO interferometers transduce their relative arm length differences caused by GWs to a signal composed of optical power, known as DARM.
-Due to amplitude scales of these GWs, these detectors have to operate at a very high sensitivity; for a 100 Hz signal, an amplitude spectral density (ASD) length difference of $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ can be recorded.
+Due to amplitude scales of astrophysical GWs, LIGO detectors have to operate at a very high sensitivity; the spectral density of a measurable length difference is as low as $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ at 100 Hz.
 The design of earthbound LIGO is thus heavily focused on treatment of environmental noise.
 
 To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility.
@@ -25,7 +25,7 @@ These require some more careful statistical correlation to identify, and are gen
   \end{minipage}
 \end{figure}
 
-Noise sources appear in a range of different frequency bands, so separating noise sources out of a signal is a clustering problem in frequency space.
+Separating noise sources out of a signal can be considered a clustering problem in a space covering different frequency bands in which noise appears.
 A previous LIGO SURF student has evaluated several data clustering algorithms with respect to their ability to properly sort out frequency elements of seismometer signals caused by specific earthquake events\cite{roxana}.
 Both the $k$-means algorithm, which aims to make clusters with low standard deviation, and the DBSCAN algorithm, which minimizes overall inter-point distance in clusters, were evaluated using multiple methods, including the Calinsky-Harabaz  index and direct comparison to earthquake times via time labeling of points, ultimately showing poor earthquake identification.
 A long short-term memory (LSTM) recurrent neural network (RNN) seemed to work much better, but due to small input sample size, this solution may have been be plagued by over-fitting.
@@ -57,3 +57,8 @@ The program tackling the second objective will use working clustering approaches
 In the event that no individual algorithm or technique outperforms the rest for all types of sensory data, the final program will use the modular programming environment created for the testing suite to match techniques to the regimes that they work in.
 The structure of the input data as determined by the first objective, including the dimensionality probed by the extra variables, may lend itself to additional algorithms that can be used to combine the target regimes.
 To this end, extra algorithm research will be conducted with specific consideration of the solved structure.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../proposal"
+%%% End:

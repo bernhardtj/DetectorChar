@@ -11,7 +11,7 @@
 \usepackage{subfigure}
 \usepackage{hyperref}
 \usepackage{tikz}
-\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{shapes,arrows,fit}
 \ligodccnumber{T}{19}{00287}{}{v1}% \ligodistribution{AIC, ISC}
 
 
@@ -25,15 +25,18 @@
 
 \section{Interim Report 1}
 
-In the first three weeks of the project, clustering scripts and BLRMS-generating scripts were developed and tested. Testing the clustering code on a dataset with known sources of noise was thought to be a good first-order check of its efficacy.
+In the first three weeks of the project, clustering scripts and BLRMS-generating scripts were developed and tested.
+Testing the clustering code on a dataset with known sources of noise was thought to be a good first-order check of its efficacy.
 
 \subsection{$k$-means clustering with histories}
-The $k$-means algorithm was used to cluster the two hours of minute-trend seismic BLRMS preceeding each point in time. Thus, each coordinate in the clustering sub-space for a channel was as follows:
+The $k$-means algorithm was used to cluster the two hours of minute-trend seismic BLRMS preceding each point in time.
+Thus, each coordinate in the clustering sub-space for a channel was as follows:
 \begin{equation}
   \left\{s(t_0),s(t_{-1}),s(t_{-2})\cdots,s(t_{-n})\right\}
 \end{equation}
-
-with $s(t)$ the seismometer velocity at time $t$. Each dimension corresponded to ``channel value a specific number of minutes ago''. This allowed trends over time to be matched together in a phase-agnostic way.
+with $s(t)$ the seismometer velocity at time $t$.
+Each dimension corresponded to ``channel value a specific number of minutes ago''.
+This allowed trends over time to be matched together in a phase-agnostic way.
 
 \begin{figure}[h]
   \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
@@ -49,22 +52,104 @@ with $s(t)$ the seismometer velocity at time $t$. Each dimension corresponded to
   \caption{Clustering script flowchart.}
 \end{figure}
 
-For a total clustering duration of 30 days, using the seismometers attatched to ETMY, ETMX, and ITMY, in minute-trend half-order-of-magnitude BLRMS bands from 30 mHz to 30 Hz, the following known noise events were easily identified (see Figures~\ref{fig:eq}-\ref{fig:anth}):
+For a total clustering duration of 30 days, using the seismometers attached to ETMY, ETMX, and ITMY, in minute-trend half-order-of-magnitude BLRMS bands from 30 mHz to 30 Hz, the following known noise events were easily identified using a ``2-hour history'' $k$-means method (see Figures~\ref{fig:eq}-\ref{fig:anth}):
 \begin{itemize}
 \item earthquakes ($0.01\to0.1$ Hz)
 \item microseisms ($0.1\to1$ Hz)
 \item anthropogenic noise ($1\to10$ Hz)
 \end{itemize}
 
-Some differentiation between subcategories of events in the same frequency band (e.g. earthquakes vs. wind; train vs. noise from cars) was lacking.
-In the future, using unlabeled PEM data, the success of this algorithm will rely heavily on appropriate band selection.
-Thinner and more targeted bands, rather than just half-order-of-magnitude, are in the works for the microphones and accelerometers.
+Some differentiation between subcategories of events in the same frequency band but of different timescales (e.g. earthquakes vs. wind; train vs. noise from cars) was lacking.
+
+The length of the history was initially thought to have an effect on the timescales of identifiable events; experimentation (namely, trying 30-minute and 6-hour histories on the same data) showed that this is not really true.
+
+The next idea was that there were too many different types of features in too large a space for events with a small number of points, like the trains, to be separated out.
+The test was re-run with only anthropogenic seismic BLRMS bands at the end stations, which yielded very clear distinction between the anthropogenic noise types (Figure~\ref{fig:trains}).
+
+A test\footnote{\url{https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html}} which swaps out the $k$-means algorithm for others implemented in \texttt{sklearn} is being executed to probe the geometry of the clusters.
+At the time of submission, the job has not completed.
+
+
+\newcommand\rightfigures[2]{
+  \begin{figure}
+  \begin{minipage}[t]{0.3\textwidth}
+    #2
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.67\textwidth}
+    \begin{tabular}{c}
+      #1
+    \end{tabular}
+  \end{minipage}
+\end{figure}
+}
+
+\newcommand\leftfigures[2]{
+\begin{figure}
+  \begin{minipage}[c]{0.67\textwidth}
+    \begin{tabular}{c}
+      #1
+    \end{tabular}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.3\textwidth}
+    #2
+  \end{minipage}
+\end{figure}
+}
+
+\rightfigures
+{
+  \includegraphics[width=\textwidth]{assets/report1/earthquakes-day2_075-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/earthquakes-day1475_05-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/earthquakes-day16_1-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/earthquakes-day24_075-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}
+}{
+  \caption{Examples of earthquakes. These vary most of all seismic noise events, so most of the extra, unrequired clusters tend to pick details out in these. For instance, two different kinds of earthquakes were clustered (here orange and purple predominantly).}\label{fig:eq}
+}
+
+\leftfigures
+{
+  \includegraphics[width=\textwidth]{assets/report1/microseism-day4_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/microseism-day8_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/microseism-day22_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}
+}{
+  \caption{Examples of microseisms identified by the $k$-means algorithm. Because the algorithm was run with more clusters than needed, several clusters are assigned to this class of event. Running with less clusters fixes this issue, but details are sometimes missed.}
+}
+
+\rightfigures
+{
+  \includegraphics[width=\textwidth]{assets/report1/daynight-day3_3-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/daynight-day12_9-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}
+}{
+  \caption{Day-night anthropogenic noise variation is identified by the $k$-means algorithm. These clusters are depicted gray.}
+}
+
+\leftfigures
+{
+  \includegraphics[width=\textwidth]{assets/report1/trains-day8_1-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/30m-trains-day8_1-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}
+}{
+  \caption{Trains are clustered with the day/night anthropogenic noise. Shortening the history window from 2 hours (upper) to 30 minutes (lower)  helps to clarify this.}\label{fig:anth}
+}
+
+\rightfigures
+{
+  \includegraphics[width=\textwidth]{assets/report1/trains-day8_1-L1:ISI-GND_STS_ETMY_BLRMS_1_3mean,m-trend.png}\\
+  \includegraphics[width=\textwidth]{assets/report1/trains-day8_3-L1:ISI-GND_STS_ETMY_BLRMS_1_3mean,m-trend.png}
+}{
+  \caption{Here, the clustering space was reduced to only the anthropogenic noise bands. This enabled identification of trains (red) separate from day/night noise (blue).}\label{fig:trains}
+}
 
 \subsection{BLRMS-generating script}
 A script to generate minute-trend BLRMS from raw PEM channels was created. This will enable BLRMS clustering for those channels not already in BLRMS frames.
 
+Some thought was put into this script.
+It is designed to post-process a channel in real time, using strides and HDF5 appending to provide a ``streaming mode''.
+The BLRMS-generating function is an implementation of a general post-processing interface, a \texttt{python3.7} dataclass which is fed INI options upon construction (see Figure~\ref{fig:pp}).
+Any data processing function which maps an input channel to an output channel and has tons of configuration parameters can take advantage of the streaming mode developed in this script by implementing the \texttt{PostProcessor} interface.
+
 \begin{figure}[h]
   \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
+  \tikzstyle{section} =[rectangle, draw, inner sep=1.125em, dashed]
   \begin{tikzpicture}[node distance = 9em, auto]
     \node [block] (dl) {get raw data from NDS};
     \node [block, below of=dl] (strides) {compute strides};
@@ -75,6 +160,8 @@ A script to generate minute-trend BLRMS from raw PEM channels was created. This 
     \node [block, right of=add] (save) {stitch stride into .hdf5 file};
     \node [block, below of=add] (shape) {read .hdf5 dataset shape};
     \node [block, below of=save] (offset) {compute offset};
+    \node [section, label=below:BLRMS \texttt{PostProcessor}, fit=(add) (compute)] (blrms) {};
+    \node [block, above of=blrms, node distance = 18em, dashed] (load) {load INI section};
     \draw [->] (dl) -- (strides);
     \draw [->] (strides) -- (next);
     \draw [->] (next) -- (stride);
@@ -85,61 +172,31 @@ A script to generate minute-trend BLRMS from raw PEM channels was created. This 
     \draw [->] (shape) -- (offset);
     \draw [->] (offset) -- (save);
     \draw [->] (save) |- (next);
+    \draw [->, dashed] (load) -- (blrms);
   \end{tikzpicture}
-  \caption{BLRMS script flowchart.}
+  \caption{States of the ``streaming post-processor'' script.}\label{fig:pp}
 \end{figure}
 
-\begin{figure}
-  \begin{minipage}[t]{0.3\textwidth}
-    \caption{Examples of earthquakes. These vary most of all seismic noise events, so most of the extra, unrequired clusters tend to pick details out in these. For instance, two different kinds of earthquakes were picked up (here orange and purple predominantly).}\label{fig:eq}
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.67\textwidth}
-    \begin{tabular}{c}
-      \includegraphics[width=\textwidth]{assets/report1/earthquakes-day2_075-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/earthquakes-day1475_05-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/earthquakes-day16_1-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/earthquakes-day24_075-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}
-    \end{tabular}
-  \end{minipage}
-\end{figure}
+Considerable effort was expended to keep both the BLRMS and clustering scripts \texttt{GWpy}-compliant.
+Enabling HDF5 appending in \texttt{GWpy} savefiles and modifying \texttt{GWpy} plots seem like common tasks for users of \texttt{GWpy}, but they needed some hackery and keyword-argument abuse (i.e. making use of possibly unintended library behavior) to work properly.
 
-\begin{figure}
-  \begin{minipage}[c]{0.67\textwidth}
-    \begin{tabular}{c}
-      \includegraphics[width=\textwidth]{assets/report1/microseism-day4_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/microseism-day8_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/microseism-day22_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}
-    \end{tabular}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.3\textwidth}
-    \caption{Examples of microseisms identified by the k-means algorithm. Because the algorithm was run with more clusters than needed, several clusters are assigned to this class of event. Running with less clusters fixes this issue, but details are sometimes missed.}
-  \end{minipage}
-\end{figure}
+\subsection{Next Steps}
+The next step is to cluster with accelerometer, microphone, and DARM BLRMS.
+There are a number of strategies that will be employed in light of the past few weeks' results.
 
+For instance, the clustering algorithm appears to gravitate toward differences across a channel parameter that is more varied in the input.
+The initial run with 6 BLRMS bands and 3 sensors distinguished between noise in different bands more than noise in the same band but in different sensors (i.e. trains vs. day/night noise).
+When the number of sensors was similar to the number of bands, the sensor-specific noise was more clearly parsed out.
 
-\begin{figure}
-  \begin{minipage}[t]{0.3\textwidth}
-    \caption{Day-night anthropogenic noise variation is identified by the k-means algorithm. These clusters are depicted grey.}
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.67\textwidth}
-    \begin{tabular}{c}
-      \includegraphics[width=\textwidth]{assets/report1/daynight-day3_3-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/daynight-day12_9-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}
-    \end{tabular}
-  \end{minipage}
-\end{figure}
+For unknown noise, it will thus be important to run multiple tests on the same data which focus on each varying parameter.
+That is, it may be best to cluster all sensors in one band, and all bands of one sensor, separately, rather than doing it all together.
 
-\begin{figure}
-  \begin{minipage}[c]{0.67\textwidth}
-    \begin{tabular}{c}
-      \includegraphics[width=\textwidth]{assets/report1/trains-day8_1-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}\\
-      \includegraphics[width=\textwidth]{assets/report1/30m-trains-day8_1-L1:ISI-GND_STS_ITMY_BLRMS_1_3mean,m-trend.png}
-    \end{tabular}
-  \end{minipage}\hfill
-  \begin{minipage}[t]{0.3\textwidth}
-    \caption{Trains are clustered with the day/night anthropogenic noise. Shortening the history window from 2 hours (upper) to 30 minutes (lower)  helps to clarify this.}\label{fig:anth}
-  \end{minipage}
-\end{figure}
+In addition, much will rest on appropriate BLRMS band selection.
+Instead of simply using half-order-of-magnitude spacing, it may be worthwhile to make a program that searches for time variance in the channel by frequency, so as to pick the most varying, and possibly charactaristic, bands for the channel.
+In his BLRMS implementation, Vajente includes hard-coded DARM bands, so it may be smart to stick with those for DARM\cite{vajente}.
+
+After experiencing the most naive presentation of the clusters, namely, time series plots with colored points, it occurs to us that there should be a way to programmatically identify the pattern that characterizes each cluster, to enable looking into mechanisms and solutions for the noise.
+This will probably involve getting the frequency of occurrence of the cluster, as well as its average dimensions (in time and amplitude), and ratios of presence in bands and sensors.
 
 \input{include/bibliography.tex}
 

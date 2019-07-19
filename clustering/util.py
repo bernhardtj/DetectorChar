@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from datetime import timedelta
 from logging import Formatter, getLogger, FileHandler, StreamHandler
 from os import makedirs
 from os.path import abspath, join, exists
@@ -58,6 +59,17 @@ def config2bounds(bounds):
     return ans
 
 
+def config2dataclass(cls, cfg, channel):
+    return [i(channel=channel,  # pass in channel
+              **kwargunion(evalkwargs(**trycfg(cfg, i.__name__)),  # pass in dataclass-specific config section
+                           evalkwargs(**trycfg(cfg, channel))))  # pass in channel-specific config section
+            for i in cls.__subclasses__() if i.__name__ in eval(trycfg(cfg, channel)[cls.__name__])]
+
+
+# list of evalkwargs imports:
+timedelta
+
+
 def evalkwargs(**kwargs):
     for key, val in kwargs.items():
         try:
@@ -66,6 +78,20 @@ def evalkwargs(**kwargs):
             pass
         kwargs[key] = val
     return kwargs
+
+
+def kwargunion(*args):
+    out = dict(args[0])
+    for arg in args[1:]:
+        out.update(dict(arg))
+    return out
+
+
+def trycfg(cfg, key):
+    try:
+        return cfg[key]
+    except KeyError:
+        return cfg['DEFAULT']
 
 
 class Progress(object):

@@ -2,8 +2,9 @@ install:
 - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
 - sudo apt-get install latexmk
 - sudo apt-get install texlive-science
+- sudo apt-get install python-pygments
 script:
-- cd doc && bash -c 'ls -1 *.tex | while read line; do latexmk -f -pdf $line; done; latexmk -c'
+- cd doc && bash -c "ls -1 *.tex | while read line; do latexmk --shell-escape -f -pdf $line; done; latexmk -c"
 deploy:
   provider: pages
   github_token: "$GITHUB_TOKEN"

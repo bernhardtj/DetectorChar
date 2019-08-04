@@ -7,5 +7,8 @@ Detector Characterization tools.
 
 - [Proposal](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/doc/proposal.pdf)
 - [Interim Report 1](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/doc/interim1.pdf) 
+- [Interim Report 2](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/doc/interim2.pdf) 
+- [Final Report](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/doc/final.pdf)
+- [Slides](https://github.com/CaltechExperimentalGravity/DetectorChar/blob/gh-pages/doc/slides.pdf) 
 
 See doc/include/motivation.tex for more details.

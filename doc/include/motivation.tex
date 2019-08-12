@@ -1,15 +1,15 @@
 \section{Introduction}
 The LIGO project uses laser interferometry to measure gravitational waves (GWs).
 LIGO interferometers transduce their relative arm length differences caused by GWs to a signal composed of optical power, known as DARM.
-Due to amplitude scales of astrophysical GWs, LIGO detectors have to operate at a very high sensitivity; the spectral density of a measurable length difference is as low as $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ at 100 Hz.
-The design of earthbound LIGO is thus heavily focused on treatment of environmental noise.
+Due to the amplitude scales of astrophysical GWs, The LIGO detectors have to operate at a very high sensitivity; the spectral density of a measurable length difference is as low as $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ at 100 Hz.
+The design of earthbound LIGO is thus heavily focused on the filtering and isolation of environmental noise.
 
-To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility.
+To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility\cite{aepaper}.
 This is used for a multitude of purposes, including the data quality report (DQR) used for time segment vetoing, based on direct coherence of PEM channels to DARM.
 Supplementing coincidence analysis between the two detectors, DQR prevents GW-like noise transients from being falsely categorized as events.
-While vetoing and determining signal quality is useful, detector livetime can be increased by figuring out how to decouple environmental noise from DARM.
+Thus, detector livetime can be increased by figuring out how to decouple environmental noise from DARM.
 Directly coupling noise, found by basic coherence, has been already addressed, but the complexity of the detector causes many noise sources to up- or down-convert.
-These require some more careful statistical correlation to identify, and are generally not well understood.
+These require some more careful statistical correlation to identify, and are sometimes not well understood.
 \begin{figure}
 \includegraphics[width=\textwidth]{assets/llopem.png}
 \caption{Schematic PEM map at the LIGO Livingston Observatory (L1). Shaded areas are in vacuum.}

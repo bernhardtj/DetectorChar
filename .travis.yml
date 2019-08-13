@@ -3,8 +3,11 @@ install:
 - sudo apt-get install latexmk
 - sudo apt-get install texlive-science
 - sudo apt-get install python-pygments
+- sudo apt-get install libreoffice
 script:
-- cd doc && bash -c "ls -1 *.tex | while read line; do latexmk --shell-escape -f -pdf $line; done; latexmk -c"
+- cd doc
+- bash -c 'ls -1 *.tex | while read line; do latexmk --shell-escape -f -pdf $line; done; latexmk -c'
+- bash -c 'ls -1 *.ppt | while read line; do libreoffice --headless --convert-to pdf:impress_pdf_Export --infilter="Microsoft PowerPoint 97/2000/XP" $line; done'
 deploy:
   provider: pages
   github_token: "$GITHUB_TOKEN"

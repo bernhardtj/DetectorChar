@@ -1,0 +1,199 @@
+\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
+            citecolor=red,urlcolor=magenta]{ligodoc}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{hyperref}
+% \usepackage{minted}
+\usepackage{appendix}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,fit}
+\ligodccnumber{T}{19}{00287}{}{v1}% \ligodistribution{AIC, ISC}
+
+
+\title{Data Clustering Techniques for the Correlation of Environmental Noise to Signals in LIGO Detectors}
+
+\author{Jacob Bernhardt, Anamaria Effler, Rana Adhikari}
+
+\begin{document}
+
+\input{include/motivation}
+
+\section{$k$-Means Clustering with Histories}
+The $k$-means algorithm was used to cluster the two hours of minute-trend data preceding each point in time.
+The coordinates of a clustered point were as follows:
+\begin{equation}
+  \begin{array}{c}
+    \{s_0(t_0),s_0(t_{-1}),s_0(t_{-2}),\cdots,s_0(t_{-n}),\\
+    s_1(t_0),s_1(t_{-1}),s_1(t_{-2}),\cdots,s_1(t_{-n}),\\
+    s_2(t_0),s_2(t_{-1}),s_2(t_{-2}),\cdots,s_2(t_{-n}),\\
+    \cdots,\\
+    s_m(t_0),s_m(t_{-1}),s_m(t_{-2}),\cdots,s_m(t_{-n})\}
+  \end{array}
+\end{equation}
+with $s_j(t)$ the value of a clustered channel $j$ at time $t$ in its own units, e.g. a seismometer velocity at time $t$.
+Each dimension could be thought of as ``value of specific channel a specific number of minutes ago'', allowing trends over time to be matched together in a phase-agnostic way.
+This yields a cluster space of dimensionality (\# of channels) $\times$ (\# of minutes of history).
+
+Notably, the clustering endeavored by \cite{roxana} lacked this history feature, using a clustering space of dimensionality (\# of channels) $\times$ (1).
+Instead of just finding times when the channels are similar in value, the history clustering is sensitive to the shape of clustered features.
+
+\begin{figure}[h]
+  \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
+  \begin{tikzpicture}[node distance = 9em, auto]
+    \node [block] (dl) {get minute-trend data from NDS};
+    \node [block, right of=dl] (input) {create input matrix};
+    \node [block, right of=input] (compute) {compute $k$-means clusters};
+    \node [block, right of=compute] (save) {save labels};
+    \draw [->] (dl) -- (input);
+    \draw [->] (input) -- (compute);
+    \draw [->] (compute) -- (save);
+  \end{tikzpicture}
+  \caption{Clustering script flowchart.}
+\end{figure}
+
+\subsection{Sanity Checking with Seismometers}
+For a total clustering duration of 30 days, using the seismometers attached to ETMY, ETMX, and ITMY, in minute-trend half-order-of-magnitude BLRMS bands from 30 mHz to 30 Hz, the following known noise events were easily identified using a ``2-hour history'' $k$-means method:
+\begin{itemize}
+\item earthquakes ($0.01\to0.1$ Hz)
+\item microseisms ($0.1\to1$ Hz)
+\item anthropogenic noise ($1\to10$ Hz)
+\end{itemize}
+
+Some differentiation between subcategories of events in the same frequency band but of different timescales (e.g. earthquakes vs. wind; train vs. noise from cars) was lacking.
+
+The length of the history was initially thought to have an effect on the timescales of identifiable events; experimentation (namely, trying 30-minute and 6-hour histories on the same data) showed that this is not really true.
+
+The next idea was that there were too many different types of features in too large a space for events with a small number of points, like the trains, to be separated out.
+The test was re-run with only anthropogenic seismic BLRMS bands at the end stations, which yielded very clear distinction between the anthropogenic noise types.
+
+\section{Clustering with DARM BLRMS}
+Now that the clustering scheme is verified using known states of noise, it can be used to find new relationships between PEM channels and DARM noise.
+
+\subsection{Seismometers}
+
+\subsection{Accelerometers}
+
+\subsection{Microphones}
+
+\section{Developed Code Tools: Optimizations and Considerations}
+Many times, scientists are inclined to launch REPLs and quickly do their simple calculations imperatively.
+But time and RAM are not infinite, and with a high-output experiment like LIGO the usual kinds of scripts and operations do not suffice.
+Given that much of the summer was spent figuring out how to write robust code that can handle large-scale data, rather than actually doing science, it is worth mentioning the way this was accomplished.
+
+\subsection{Streaming}
+One data-wrangling strategy is by programming with a ``streaming'' rather than ``batch'' mentality.
+Many of the gravitational wave search pipelines have the ability to keep up with new LIGO data as it is collected, doing their batch-style work in short chunks, or strides, as the data comes along.
+This keeps the execution footprint of the program managable, while allowing it to operate on an unending amount of data.
+
+The Python package \texttt{GWpy}, used in this project, is the modern equivalent to LIGO's Algorithms Library, a set of common routines designed for LIGO data.
+Strangely, appending to HDF5 savefiles, a streaming requisite, is not possible in \texttt{GWpy} without some lower-level calculations using the \texttt{libhdf5} wrapper directly and likely unintented \texttt{GWpy} keyword-argument usage.
+
+Two helper functions, \texttt{write\_to\_disk} and \texttt{data\_exists}, were defined in \texttt{util.py} for the purpose of apppending a time series to an existing file and quickly checking the length of saved data without reading it.
+
+A Python module was written to implement the ``streaming'' idea for any given batch operation.
+One such task is the computation of BLRMS for channels that don't provide it in DMT frames.
+The BLRMS-generating function is an implementation of a general \texttt{PostProcessor} interface, a \texttt{python3.7} dataclass which is fed INI options upon construction (see Figure~\ref{fig:pp}).
+\begin{figure}[h]
+  \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
+  \tikzstyle{section} =[rectangle, draw, inner sep=1.125em, dashed]
+  \begin{tikzpicture}[node distance = 9em, auto]
+    \node [block] (dl) {get data from NDS or savefiles};
+    \node [block, below of=dl] (strides) {compute strides};
+    \node [block, right of=strides] (next) {get next stride};
+    \node [block, below of=next] (stride) {extract stride};
+    \node [block, right of=stride] (compute) {compute spectogram};
+    \node [block, right of=compute] (add) {add power within requested bands};
+    \node [block, right of=add] (save) {stitch stride into .hdf5 file};
+    \node [block, below of=add] (shape) {read .hdf5 dataset shape};
+    \node [block, below of=save] (offset) {compute offset};
+    \node [section, label=below:BLRMS \texttt{PostProcessor}, fit=(add) (compute)] (blrms) {};
+    \node [block, above of=blrms, node distance = 18em, dashed] (load) {load INI section};
+    \draw [->] (dl) -- (strides);
+    \draw [->] (strides) -- (next);
+    \draw [->] (next) -- (stride);
+    \draw [->] (stride) -- (compute);
+    \draw [->] (compute) -- (add);
+    \draw [->] (add) -- (save);
+    \draw [->] (stride) |- (shape);
+    \draw [->] (shape) -- (offset);
+    \draw [->] (offset) -- (save);
+    \draw [->] (save) |- (next);
+    \draw [->, dashed] (load) -- (blrms);
+    \draw [->, dashed] (load) -- (dl);
+  \end{tikzpicture}
+  \caption{States of the ``streaming post-processor'' script.}\label{fig:pp}
+\end{figure}
+
+Any data processing function which maps an input channel to an output channel and has tons of configuration parameters can take advantage of the module by implementing the \texttt{PostProcessor} interface.
+Indeed, converting saved channels to minute-trend and caching NDS downloads in the same format were easy last-minute tasks with this generic structure in place.
+
+\subsection{Evaluation of Clusters}
+The clustering script itself was fairly straightforward, using the high abstraction provided by \texttt{scikit-learn}.
+However, some thought was put into extracting meaning from the clusters.
+
+A script was created to make power spectra for the clustered data representative of each cluster.
+This is done by taking the median of the power spectra for many time intervals clustered together.
+\begin{figure}[h]
+  \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
+  \tikzstyle{section} =[rectangle, draw, inner sep=1.125em, rounded corners, ->]
+  \begin{tikzpicture}[node distance = 9em, auto]
+    \node [block] (labels) {read labels};
+    \node [block, left of=labels] (filter) {locate base cluster};
+    \node [block, left of=filter] (segments) {locate non-base cluster segments};
+    \node [block, left of=segments] (dl) {download full-rate minutes in segments};
+    \node [block, below of=segments] (psd) {take  psd for each minute in the cluster};
+    \node [block, right of=psd] (median) {plot median};
+    \node [section, label=above:for each cluster, fit=(psd) (median)] (cluster) {};
+    \draw [->] (labels) -- (filter);
+    \draw [->] (filter) -- (segments);
+    \draw [->] (segments) -- (dl);
+    \draw [->] (dl) |- (cluster);
+    \draw [->] (psd) -- (median);
+  \end{tikzpicture}
+  \caption{Roughly the states of the ``representative spectra'' script. The most complicated overlooked detail in this figure is the caching of downloads. The stream writing functions used in the BLRMS-generation script have been moved and are now included from a more general location.}
+\end{figure}
+
+Taking the spectra of the clusters provides a signature for each cluster that can be programmatically validated, allowing new states to be detected without re-clustering, and also a way to easily identify frequency conversion that is happening during coupling.
+The script can extract other attributes that are helpful for chasing down the source and eliminating it, like the periodicity or dominating channels.
+\begin{figure}
+  \includegraphics[width=\textwidth]{assets/report2/0-L1:ISI-GND_STS_Z_DQ.png}
+  \caption{The representative spectrum of a cluster corresponding to train-dominated times. Notice that between 1 and 10 Hz, the seismic motion at ETMY (orange) is greater than at the other VEAs by a factor of about 10.}
+\end{figure}
+
+In addition, the script can produce a table that shows which frequency bands are significant in each channel during clustered times.
+``Significance'' is established by determining if the average BLRMS value at clustered times is not close to the BLRMS value of ``unclustered'' times, or times in the base cluster representing ``everything else''.
+
+
+\appendix
+\appendixpage
+\section{Resampling}
+Downloading and saving full-rate data takes an exorbitant amount of disk space, especially when only a portion of the frequency content is going to be used.
+This calls for a decimation procedure to be applied to raw downloads before they are saved.
+
+At CIT, Rana mentioned that the default low-pass filtering options in scipy's resampling function produce significant aliasing noise ($>1$\%) when downsampling by a large factor.
+According to a test\footnote{see \url{https://git.ligo.org/NoiseCancellation/GWcleaning/issues/2}} done by Eric Quintero, this issue can be remedied without sacrificing runtime by using (1) a number of FIR taps proportional to the downsampling factor, rather than the default fixed value, and (2) a non-default window (\texttt{blackmanharris}).
+
+% FIXME: figure of window comparison
+
+For a full-rate time series \texttt{raw: gwpy.timeseries.TimeSeries}, the fastest and best procedure for resampling to \texttt{rate: int [Hz]} would be something like
+% \begin{minted}[style=colorful]{python}
+\begin{verbatim}
+raw.resample(n=20*raw.sample_rate.value/rate, window='blackmanharris', rate=rate)
+\end{verbatim}
+% \end{minted}
+
+\section{Evaluation of Non-$k$-means Clustering Algorithms}
+A test\footnote{\url{https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html}} which swaps out the $k$-means algorithm for others implemented in \texttt{sklearn} was executed to probe the geometry of the clusters.
+From a first glance, the Spectral Clustering and Gaussian Mixture algorithms seemed to generalize better than $k$-means over different feature timescales.
+However, algorithm upgrades are helpful only after tools for full cluster analysis are in place, and due to time limitations they were not revisited.
+
+\input{include/bibliography.tex}
+
+\end{document}

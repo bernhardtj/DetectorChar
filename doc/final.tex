@@ -23,9 +23,53 @@
 
 \begin{document}
 
-\input{include/motivation}
+\section{Introduction}
+The LIGO project uses laser interferometry to measure gravitational waves (GWs).
+LIGO interferometers transduce their relative arm length differences caused by GWs to a signal composed of optical power, known as DARM.
+Due to the amplitude scales of GWs, The LIGO detectors have to operate at a very high sensitivity; the spectral density of a measurable length difference is as low as $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ at 100 Hz.
+The design of earthbound LIGO is thus heavily focused on the filtering and isolation of environmental noise.
 
-\section{$k$-Means Clustering with Histories}
+To help identify and characterize environment-based noise, the LIGO detector has a Physical Environment Monitoring (PEM) system, a diverse array of environmental sensors positioned all over the facility\cite{aepaper}.
+This is used for a multitude of purposes, including the data quality report (DQR), which aims to veto segments of time by finding correlations between PEM and DARM through statistical inference and sometimes also supervised learning.
+Supplementing coincidence analysis between the two detectors, DQR prevents GW-like noise transients from being falsely categorized as events.
+
+Both detector livetime and detection range can be increased by figuring out how to decouple environmental noise from DARM.
+Directly coupling noise, found by basic coherence, has been already addressed, but the complexity of the detector causes many noise sources to up- or down-convert.
+These require some more careful statistical correlation to identify, and are sometimes not well understood.
+\begin{figure}
+\includegraphics[width=\textwidth]{assets/llopem.png}
+\caption{Schematic PEM map at the LIGO Livingston Observatory (L1). Shaded areas are in vacuum.}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=\textwidth]{assets/L1:DMT-SNSH_EFFECTIVE_RANGE_MPC.png}
+  \caption{Detector range at L1 seems to consistently reduce during the day ($\sim$6am-5pm CST), thought to result from anthropic activity. This can be as much as 10 Mpc for NS-NS mergers.}
+\end{figure}
+
+Separating noise sources out of a signal can be considered a clustering problem in a space covering different frequency bands in which noise appears.
+A previous LIGO SURF student has evaluated several data clustering algorithms with respect to their ability to properly sort out frequency elements of seismometer signals caused by specific earthquake events\cite{roxana}.
+Both the $k$-means algorithm, which aims to make clusters with low standard deviation, and the DBSCAN algorithm, which minimizes overall inter-point distance in clusters, were evaluated using multiple methods, including the Calinsky-Harabaz  index and direct comparison to earthquake times via time labeling of points, ultimately showing poor earthquake identification.
+A long short-term memory (LSTM) recurrent neural network (RNN) seemed to work much better, but due to small input sample size, this solution may have been be plagued by over-fitting.
+Thus, it is imperative that a more robust frequency clustering mechanism be designed for the PEM system.
+
+\section{Objectives}
+\begin{itemize}
+\item
+  Find an algorithm or clustering approach which correctly identifies known noise events.
+\item
+  Create a clustering approach to discover previously unknown noise correlations and/or sources.
+\end{itemize}
+
+\section{Approach}
+
+A program was written to take the spectral power of any PEM channel, in the form of band-limited RMS (BLRMS) by summing in-band bins of a power spectrogram, with inspiration from \cite{vajente}. By clustering spectral bands of PEM channels, frequency conversions could be accounted for.
+
+A Python script was written to perform the an initial clustering approach, explained in Section~\ref{sec:kmeans}, with a variety of tunable parameters. It was validated on a regime with known noise states, the seismometers, satisfying the first objective. No other clustering approach was extensively investigated (Appendix~\ref{app:algo}).
+
+Unknown noise states in accelerometers and microphones were clustered using this approach, to meet the second objective. (Section~\ref{sec:unknown}).
+
+To glean the correlations between frequencies in clustered channels, a script was created to visually present the power in frequencies in channels by cluster. This is explained in Section~\ref{ssec:eval}.
+
+\section{$k$-Means Clustering with Histories}\label{sec:kmeans}
 The $k$-means algorithm was used to cluster the two hours of minute-trend data preceding each point in time.
 The coordinates of a clustered point were as follows:
 \begin{equation}
@@ -68,13 +112,26 @@ For a total clustering duration of 30 days, using the seismometers attached to E
 
 Some differentiation between subcategories of events in the same frequency band but of different timescales (e.g. earthquakes vs. wind; train vs. noise from cars) was lacking.
 
+\begin{figure}[h]\hspace{-2ex}
+  \includegraphics[width=0.7\textwidth]{assets/final/earthquakes-day16_1-L1:ISI-GND_STS_ITMY_BLRMS_30M_100Mmean,m-trend.png}
+  \includegraphics[width=0.7\textwidth]{assets/final/microseism-day8_4-L1:ISI-GND_STS_ITMY_BLRMS_100M_300Mmean,m-trend.png}
+  \caption{Seismic BLRMS near clustered earthquakes (above, purple, 30 mHz $\to$ 0.1 Hz) and microseism (below, green, 0.1 Hz $\to$ 0.3 Hz)}
+\end{figure}
+
 The length of the history was initially thought to have an effect on the timescales of identifiable events; experimentation (namely, trying 30-minute and 6-hour histories on the same data) showed that this is not really true.
 
 The next idea was that there were too many different types of features in too large a space for events with a small number of points, like the trains, to be separated out.
-The test was re-run with only anthropogenic seismic BLRMS bands at the end stations, which yielded very clear distinction between the anthropogenic noise types.
+The test was re-run with only anthropogenic seismic BLRMS bands at the end stations, which yielded very clear distinction between the anthropogenic noise types (See Figure~\ref{fig:trains}).
 
-\section{Clustering with DARM BLRMS}
-Now that the clustering scheme is verified using known states of noise, it can be used to find new relationships between PEM channels and DARM noise.
+\begin{figure}
+  \includegraphics[width=0.7\textwidth]{assets/final/daynight-day2_3-L1:ISI-GND_STS_ETMY_BLRMS_1_3mean,m-trend.png}
+  
+  \raggedleft{\includegraphics[width=0.7\textwidth]{assets/final/trains-day8_3-L1:ISI-GND_STS_ETMY_BLRMS_1_3mean,m-trend.png}}
+  \caption{Seismic BLRMS from 1 Hz $\to$ 3 Hz. Using all bands, the $k$-means approach clustered all anthropogenic features together (above, gray). Limiting the clustering space allowed short events like trains (red, below) to be separated out from day/night variation (blue, below).}\label{fig:trains}
+\end{figure}
+
+\section{Clustering of Unknown Noise States}\label{sec:unknown}
+Now that the clustering scheme was verified using known states of noise, it could be used to find new relationships between PEM channels and DARM noise.
 
 \subsection{Seismometers}
 
@@ -134,7 +191,7 @@ The BLRMS-generating function is an implementation of a general \texttt{PostProc
 Any data processing function which maps an input channel to an output channel and has tons of configuration parameters can take advantage of the module by implementing the \texttt{PostProcessor} interface.
 Indeed, converting saved channels to minute-trend and caching NDS downloads in the same format were easy last-minute tasks with this generic structure in place.
 
-\subsection{Evaluation of Clusters}
+\subsection{Evaluation of Clusters}\label{ssec:eval}
 The clustering script itself was fairly straightforward, using the high abstraction provided by \texttt{scikit-learn}.
 However, some thought was put into extracting meaning from the clusters.
 
@@ -189,7 +246,7 @@ raw.resample(n=20*raw.sample_rate.value/rate, window='blackmanharris', rate=rate
 \end{verbatim}
 % \end{minted}
 
-\section{Evaluation of Non-$k$-means Clustering Algorithms}
+\section{Evaluation of Non-$k$-means Clustering Algorithms}\label{app:algo}
 A test\footnote{\url{https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html}} which swaps out the $k$-means algorithm for others implemented in \texttt{sklearn} was executed to probe the geometry of the clusters.
 From a first glance, the Spectral Clustering and Gaussian Mixture algorithms seemed to generalize better than $k$-means over different feature timescales.
 However, algorithm upgrades are helpful only after tools for full cluster analysis are in place, and due to time limitations they were not revisited.

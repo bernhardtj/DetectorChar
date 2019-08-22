@@ -4,6 +4,7 @@ Makes a post-processed channel
 
 Provides:
 process_channel()
+channeling_reader()
 implementations of PostProcessor
 
 """
@@ -12,13 +13,13 @@ from datetime import datetime, timedelta
 from typing import List, Tuple
 
 from gwpy.segments import DataQualityFlag
-from gwpy.time import to_gps, from_gps
+from gwpy.time import to_gps
 from gwpy.timeseries import TimeSeries, TimeSeriesDict
-from h5py import File
-from numpy import median, zeros_like, arange, where, logical_and, setdiff1d, sqrt, NaN, isnan, interp, sum
+from numpy import median, zeros_like, arange, where, logical_and, setdiff1d, sqrt, NaN, isnan, interp, sum, unique
 from scipy.signal import spectrogram
 
-from util import get_logger, path2config, get_path
+from util import get_logger, path2config, get_path, write_to_disk, better_aa_opts, data_exists, config2dataclass, \
+    path2h5file
 
 # initialize logging.
 logger, log_path = get_logger(__name__, verbose=True)
@@ -43,7 +44,7 @@ class PostProcessor:
 
     # channel-specific config options
     postprocessor: list  # need to specify post-processors to instantiate on a per-channel basis.
-    bands: List[Tuple[int]]  # BLRMS bands of form [(start1, stop1), (start2, stop2) ... (startN, stopN)] in Hz.
+    bands: List[Tuple[int, int]]  # BLRMS bands of form [(start1, stop1), (start2, stop2) ... (startN, stopN)] in Hz.
 
     # dependent attributes.
     @property
@@ -87,8 +88,7 @@ class BLRMS(PostProcessor):
         debug = f'compute_blrms ({self.channel}) : '
 
         # resample to specified frequency.
-        # x = decimate(raw.value, int(raw.sample_rate.value / fs))
-        raw = raw.resample(self.fs)
+        raw = raw.resample(**better_aa_opts(raw, self.fs))
 
         # compute spectogram. Set up kwargs for creation of output TimeSeries.
         F, T, Sh = spectrogram(raw.value, nperseg=self.fs * self.tn, noverlap=int(self.fs * self.to), fs=self.fs)
@@ -162,7 +162,45 @@ class BLRMS(PostProcessor):
         return out
 
 
-def process_channel(processor: PostProcessor, start: datetime, stop: datetime) -> str:
+@dataclass
+class RawCache(PostProcessor):
+    """Downloads and saves the data."""
+
+    @property
+    def output_channels(self) -> List[str]:
+        # for some reason the commas are not being escaped.
+        # chop off the last bit for saved minute-trend data.
+        if self.channel.endswith(',m-trend'):
+            return [self.channel.replace(',m-trend', '')]
+        else:
+            return [self.channel]
+
+    def compute(self, raw: TimeSeries) -> TimeSeriesDict:
+        out = TimeSeriesDict()
+        if self.channel.endswith(',m-trend'):
+            raw.name = raw.name.replace(',m-trend', '')
+        out[raw.name] = raw
+        return out
+
+
+@dataclass
+class MinuteTrend(PostProcessor):
+    """Makes minute-trend data."""
+
+    @property
+    def output_channels(self) -> List[str]:
+        return [self.channel + '.mean']
+
+    def compute(self, raw: TimeSeries) -> TimeSeriesDict:
+        out = TimeSeriesDict()
+        times = unique([60 * (t.value // 60) for t in raw.times])
+        raw.name = raw.name + '.mean'
+        out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times)
+        out[raw.name].__metadata_finalize__(raw)
+        return out
+
+
+def process_channel(processor: PostProcessor, start: datetime, stop: datetime, downloader=TimeSeriesDict.get) -> str:
     """
     Post-processes a channel using the given post-processor, and streams to a file in the working directory.
     The output .hdf5 file is given by the channel name and the start time.
@@ -191,54 +229,8 @@ def process_channel(processor: PostProcessor, start: datetime, stop: datetime) -
 
     """
 
-    # for a h5py dataset in a gwpy save file, we have dataset.attrs['x0'] == (data: TimeSeries).t0.seconds. However, it
-    # is useful to be able to quickly get (data: TimeSeries).times[-1].seconds without having to read out all the data.
-    # This is the hacky calculation that makes the appending support of hdf5 usable with gwpy.
-    get_last_time = lambda dataset: int(dataset.attrs['x0'] + (dataset.shape[0] - 1) * dataset.attrs['dx'])
-
-    def write_to_disk(data_dict: TimeSeriesDict, seg_start: int, f: File):
-        """Write a TimeSeriesDict to a gwpy-compatible .hdf5 file. Supports appending to an existing file."""
-
-        for name in data_dict:
-
-            # deal with each TimeSeries in the TimeSeriesDict.
-            data = data_dict[name]
-
-            try:
-
-                # create a gwpy-compatible h5py file.
-                # these kwargs are passed down through gwpy and are ultimately evaluated by h5py create_dataset.
-                # this is done so that the TimeSeries dataset is created in an mode that supports appending.
-                data.write(f, compression="gzip", chunks=True, maxshape=(None,))
-
-            except RuntimeError:  # the RuntimeError in regard here is caused by the dataset already existing.
-
-                # use the h5py File driver to get a direct pointer to the existing dataset.
-                dataset = f[name]
-
-                # compute the time offset between the existing data and the new data.
-                last_time = get_last_time(dataset)
-                secs = seg_start - last_time
-                padding = secs / dataset.attrs['dx']
-                logger.debug(f'write: padding from {last_time} to {seg_start} ({secs}s, {padding}pts)')
-
-                if data.value.shape[0] < -padding:
-
-                    # this would resize the dataset to be smaller than it already is.
-                    raise RuntimeError('insertion is not supported.')
-
-                else:
-
-                    # append data to the end of the file.
-                    dataset.resize((dataset.shape[0] + padding + data.value.shape[0]), axis=0)
-                    dataset[-data.value.shape[0]:] = data.value
-                    f.flush()  # sync table to disk
-
-            logger.info(f'Wrote {name} to {f}')
-
     # use h5py to make a mutable object pointing to a file on disk.
-    filename = get_path(f'{processor.channel} {start}', 'hdf5')
-    channel_file = File(filename, 'a')
+    channel_file, filename = path2h5file(get_path(f'{processor.channel} {start}', 'hdf5'))
     logger.debug(f'Initiated hdf5 stream to {filename}')
 
     # get the number of strides.
@@ -252,18 +244,7 @@ def process_channel(processor: PostProcessor, start: datetime, stop: datetime) -
     # stride loop.
     for stride_start, stride_stop in strides:
 
-        # check for existing data.
-        for channel in processor.output_channels:  # get expected channel names from the processor.
-
-            try:
-                if from_gps(get_last_time(channel_file[channel])) < stride_stop:
-                    # this means the length of the existing data does not extend to where we intend to generate.
-                    break
-
-            except KeyError:  # channel_file[channel] is not there.
-                break
-
-        else:
+        if data_exists(processor.output_channels, to_gps(stride_stop).seconds, channel_file):
             # for all possible output channels, it's likely this stride exists already on disk.
             continue
 
@@ -272,18 +253,24 @@ def process_channel(processor: PostProcessor, start: datetime, stop: datetime) -
 
         # separately download all observing segments within the stride, or one segment for the whole stride.
         # this is set by the processor.respect_segments: bool option.
-        raw_segments = [[TimeSeries.get(processor.channel, seg_start, seg_stop + processor.extra_seconds), seg_start]
-                        for i, seg_start, seg_stop in (
-                            [[i, int(s.start), int(s.end)] for i, s in enumerate(DataQualityFlag.query(
-                                'L1:DMT-ANALYSIS_READY:1', to_gps(stride_start), to_gps(stride_stop)).active)]
-                            if processor.respect_segments else
-                            [[0, to_gps(stride_start).seconds, to_gps(stride_stop).seconds]])]
+        # it really should be processor.respect_segments: str = 'L1:DMT-ANALYSIS_READY:1' for generality.
+        segments = [[int(s.start), int(s.end)] for s in
+                    DataQualityFlag.query('L1:DMT-ANALYSIS_READY:1', to_gps(stride_start), to_gps(stride_stop)).active
+                    ] if processor.respect_segments else [[to_gps(stride_start).seconds, to_gps(stride_stop).seconds]]
+
+        raw_segments = list()
+        for seg_start, seg_stop in segments:
+            try:
+                raw_segments.append([downloader([processor.channel],
+                                                start=seg_start, end=seg_stop + processor.extra_seconds), seg_start])
+            except RuntimeError:  # sometimes the data does not exist on the server. The show must go on, though.
+                logger.warning(f'SKIPPING download for {processor.channel} ({stride_start} to {stride_stop}) !!')
 
         logger.info(f'Completed data download for {processor.channel} ({stride_start} to {stride_stop})')
 
         for raw, segment_start in raw_segments:
             # use the processor to compute each downloaded segment in the stride.
-            finished_segment = processor.compute(raw)
+            finished_segment = processor.compute(raw[processor.channel])
             logger.info(f'Generated {processor.__class__.__name__} for {processor.channel}')
 
             # write each computed segment to the channel file.
@@ -295,3 +282,45 @@ def process_channel(processor: PostProcessor, start: datetime, stop: datetime) -
 
     # for automated usage of the post-processed data, return the generated filename.
     return filename
+
+
+def channeling_reader(in_channels: List[str], generation_start: datetime, search_dirs: List[str] = ('.',)):
+    """
+    Return an equivalent function to TimeSeriesDict.get() for retrieving post-processed data.
+    The naming scheme for save files used by this script is f'{processor.channel} {start}.hdf5',
+    in order to avoid insertion caused by starting at different times. As you probably already
+    know from reading util.py, insertion is not supported.
+
+    :param in_channels: list of names of input channels processed to create the searchable channels.
+    :param generation_start: time of generation start for the input channels.
+    :param search_dirs: places to search for channeling files.
+    :return: equivalent function to TimeSeriesDict.get() set to search with the parameters given.
+    """
+
+    def channeling_read(out_channels: List[str], **kwargs) -> TimeSeriesDict:
+        out = TimeSeriesDict()
+
+        for channel in out_channels:
+            for prefix in search_dirs:
+                for in_channel in in_channels:
+                    try:
+                        # lock the target file
+                        h5file, _ = path2h5file(
+                            get_path(f'{in_channel} {generation_start}', 'hdf5', prefix=prefix),
+                            mode='r')
+                        # read off the dataset
+                        out[channel] = TimeSeries.read(h5file, channel, **kwargs)
+                    except (FileNotFoundError, KeyError, OSError):
+                        # file not found / hdf5 can't open file (OSError), channel not in file (KeyError)
+                        continue
+                    break
+                else:
+                    continue
+                break
+            else:
+                # tried all search dirs but didn't find it. Attempt to download.
+                raise FileNotFoundError(f'CANNOT FIND {channel}!!')
+                # out[channel] = TimeSeries.get(channel, **kwargs) # slow.
+        return out
+
+    return channeling_read

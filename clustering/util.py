@@ -1,8 +1,23 @@
+"""
+util.py
+
+Provides the following utilities:
+
+- Logging
+- INI Config files
+- Progress Bars
+- Data appending to HDF5 files
+- User kwargs for common tasks
+"""
+
 from configparser import ConfigParser
 from datetime import timedelta
 from logging import Formatter, getLogger, FileHandler, StreamHandler
 from os import makedirs
 from os.path import abspath, join, exists
+
+from gwpy.timeseries import TimeSeriesDict
+from h5py import File
 
 DEFAULT_LOG_LEVEL = 10
 DEFAULT_LOG_PREFIX = '.'
@@ -114,3 +129,79 @@ class Progress(object):
     @staticmethod
     def noop(*args, **kwargs):
         pass
+
+
+def path2h5file(path, mode='a'):
+    return File(path, mode), path
+
+
+# for a h5py dataset in a gwpy save file, we have dataset.attrs['x0'] == (data: TimeSeries).t0.seconds. However, it
+# is useful to be able to quickly get (data: TimeSeries).times[-1].seconds without having to read out all the data.
+# This is the hacky calculation that makes the appending support of hdf5 usable with gwpy.
+get_last_time = lambda dataset: int(dataset.attrs['x0'] + (dataset.shape[0] - 1) * dataset.attrs['dx'])
+
+
+def data_exists(channels, seg_stop: int, f: File):
+    """Check for existing data up to a point, in the format created by write_to_disk."""
+
+    for channel in channels:
+
+        try:
+            if get_last_time(f[channel]) < seg_stop:
+                # this means the length of the existing data does not extend to where we intend to generate.
+                break
+
+        except KeyError:  # channel_file[channel] is not there.
+            break
+
+    else:
+        # for all channels, it's likely this segment exists already on disk.
+        return True
+
+    return False
+
+
+def write_to_disk(data_dict: TimeSeriesDict, seg_start: int, f: File):
+    """Write a TimeSeriesDict to a gwpy-compatible .hdf5 file. Supports appending to an existing file."""
+
+    for name in data_dict:
+
+        # deal with each TimeSeries in the TimeSeriesDict.
+        data = data_dict[name]
+
+        try:
+
+            # create a gwpy-compatible h5py file.
+            data.write(f, **writing_opts)
+
+        except RuntimeError:  # the RuntimeError in regard here is caused by the dataset already existing.
+
+            # use the h5py File driver to get a direct pointer to the existing dataset.
+            dataset = f[name]
+
+            # compute the time offset between the existing data and the new data.
+            secs = seg_start - get_last_time(dataset)
+            padding = secs / dataset.attrs['dx']
+            # print(f'write: padding from {get_last_time(dataset)} to {seg_start} ({secs}s, {padding}pts)')
+
+            if data.value.shape[0] < -padding:
+
+                # this would resize the dataset to be smaller than it already is.
+                raise RuntimeError('insertion is not supported.')
+
+            else:
+
+                # append data to the end of the file.
+                dataset.resize((dataset.shape[0] + padding + data.value.shape[0]), axis=0)
+                dataset[-data.value.shape[0]:] = data.value
+                f.flush()  # sync table to disk
+
+
+# better fir window for anti-aliasing large TimeSeries decimation.
+# see https://git.ligo.org/NoiseCancellation/GWcleaning/issues/2
+better_aa_opts = lambda tser, fs: {'rate': fs, 'n': int(20 * tser.sample_rate.value / fs), 'window': 'blackmanharris'}
+
+# always to TimeSeries.write(**writing_opts)
+# these kwargs are passed down through gwpy and are ultimately evaluated by h5py create_dataset.
+# this is done so that the TimeSeries dataset is created in an mode that supports appending.
+writing_opts = {'compression': 'gzip', 'chunks': True, 'maxshape': (None,), 'append': True}

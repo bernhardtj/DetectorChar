@@ -19,16 +19,20 @@ from numpy import stack, concatenate
 from sklearn.cluster import KMeans
 from gwpy.segments import DataQualityFlag
 
-from util import get_logger, Progress
+from util import get_logger, Progress, get_path
 
 DEFAULT_FILENAME = 'cache.hdf5'
+
+# FIXME A list of colors defines the maximum amount of clusters. Sample from a colormap instead.
+colors = ['r', 'g', 'b', 'y', 'c', 'm', 'darkgreen', 'darkblue', 'orangered', 'plum', 'indigo', 'brown',
+          'chartreuse', 'pink', 'darkslategray']
 
 # initialize logging.
 logger, log_path = get_logger(__name__, verbose=True)
 print(f'Writing log to: {log_path}')
 
 
-def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=DEFAULT_FILENAME, **kwargs):
+def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=DEFAULT_FILENAME, downloader=TimeSeriesDict.get, **kwargs):
     """
     Computes k-means clusters and saves the data and labels to filename.
     **kwargs are forwarded to the KMeans constructor.
@@ -52,7 +56,7 @@ def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=D
 
     # download data using TimeSeries.get(), including history of point at t0.
     logger.debug(f'Initiating download from {start} to {stop} with history={history}...')
-    dl = TimeSeriesDict.get(channels, start=to_gps(start - history), end=to_gps(stop))
+    dl = downloader(channels, start=to_gps(start - history), end=to_gps(stop))
     logger.info(f'Downloaded from {start} to {stop} with history={history}.')
 
     # generate input matrix of the form [sample1;...;sampleN] with sampleK = [feature1,...,featureN]
@@ -134,10 +138,6 @@ def cluster_plotter(channels, start, stop,
     if groups is None:
         groups = channels
 
-    # FIXME A list of colors defines the maximum amount of clusters. Sample from a colormap instead.
-    colors = ['r', 'g', 'b', 'y', 'c', 'm', 'orangered', 'darkgreen', 'darkblue', 'plum', 'indigo', 'brown',
-              'chartreuse', 'pink', 'darkslategray']
-
     # read the data from the save file.
     data = TimeSeriesDict.read(filename, channels + [label], start=to_gps(start), end=to_gps(stop))
     logger.info(f'Read {start} to {stop} from {filename}')
@@ -174,6 +174,6 @@ def cluster_plotter(channels, start, stop,
             plt.suptitle(title)
 
             # save to png.
-            progress(plt.save, p, f'{prefix}/{title}.png')
+            progress(plt.save, p, get_path(title, 'png', prefix=prefix))
 
     logger.info(f'Completed plotting for {start} to {stop} from {filename}')

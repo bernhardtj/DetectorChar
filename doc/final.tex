@@ -26,6 +26,7 @@
 \section{Introduction}
 The LIGO project uses laser interferometry to measure gravitational waves (GWs).
 LIGO interferometers transduce their relative arm length differences caused by GWs to a signal composed of optical power, known as DARM.
+
 Due to the amplitude scales of GWs, The LIGO detectors have to operate at a very high sensitivity; the spectral density of a measurable length difference is as low as $2\times 10^{-20}~\mathrm{m}/\sqrt{\mathrm{Hz}}$ at 100 Hz.
 The design of earthbound LIGO is thus heavily focused on the filtering and isolation of environmental noise.
 
@@ -133,13 +134,129 @@ The test was re-run with only anthropogenic seismic BLRMS bands at the end stati
 \section{Clustering of Unknown Noise States}\label{sec:unknown}
 Now that the clustering scheme was verified using known states of noise, it could be used to find new relationships between PEM channels and DARM noise.
 
-\subsection{Seismometers}
+\subsection{Microphones}\label{ssec:mic}
+
+A ``2-hour history'' $k$-means method was used to cluster 30 days of data from microphones in the LVEA, XVEA and YVEA in BLRMS bands shown in Table~\ref{tab:blrms}.
+\begin{table}\centering
+  \begin{tabular}{l|l|l}
+    DARM & MIC & ACC \\
+    \hline \hline
+    \begin{tabular}[t]{@{}l@{}}
+      10-13 \\
+      18-22 \\
+      22-27 \\
+      27-29 \\
+      29-40 \\
+      40-54 \\
+      54-65 \\
+      65-76 \\
+      75-115 \\
+      115-190 \\
+      190-210 \\
+      210-290 \\
+      290-480 \\
+      526-590 \\
+      590-650 \\
+      650-885 \\
+      885-970 \\
+      1110-1430
+    \end{tabular} &
+    \begin{tabular}[t]{@{}l@{}}
+      10-28 \\
+      28-32 (HVAC) \\
+      32-50 \\
+      50-70 \\
+      70-100 \\
+      100-200
+    \end{tabular} &
+    \begin{tabular}[t]{@{}l@{}}
+      1-4 \\
+      4-10 \\
+      10-28 \\
+      28-32 \\
+      32-48 \\
+      48-60 \\
+      60-80 \\
+      80-118 \\
+      118-122 \\
+      122-200
+    \end{tabular}\\
+    \hline
+  \end{tabular}
+  \caption{Selected clustering BLRMS bands [Hz].}\label{tab:blrms}
+\end{table}
+Two interesting ``noisy'' states were identified: a relatively quiet, multi-hour cluster, and a quick, loud cluster.
+Tables of the median percent increase of amplitude in certain BLRMS bands with respect to the largest cluster in the run (representative of the noise floor) are shown in Table~\ref{tab:mic}, and their spectra in Figure~\ref{fig:mic}.
+
+\begin{table}\hspace{2em}
+  \begin{tabular}{l|llr}
+    Hz & 10-28 & 28-32 & 32-50 \\ \hline
+    LVEA & 109\% & 95\% & 176\% \\
+    XVEA & 87\% &   &  89\% \\
+    YVEA & 131\% & 83\% & 165\%
+  \end{tabular}\hfill
+  \begin{tabular}{l|lr}
+    Hz & 32-50 & 50-70 \\ \hline
+    LVEA & 1112\% & 890\% \\
+    PLUSX & 1183\% & 1034\% \\
+    PLUSY & 1100\%
+  \end{tabular}\hspace{2em}
+  \caption{Percent increase tables (see Section~\ref{ssec:eval}) for clustered acoustic long, quiet (left) and short, loud (right) states.}\label{tab:mic}
+\end{table}
+
+The clustering was repeated with observing segments of \texttt{L1:GDS-CALIB\_STRAIN} included.
+This produced approximately the same clusters as before, likely because segmenting of DARM added weight to the MIC channels.
+The cluster corresponding to the same longer, quieter ``noisy'' state occured during locked times, so its effect on DARM was examined.
+As shown in Table~\ref{tab:micdarm}, there was a slight average increase in DARM during the cluster.
+This difference can also be seen in the representative spectrum (see Section~\ref{ssec:eval}) of the cluster (Figure~\ref{fig:mic}).
+Nevertheless, the noise state does not impact DARM significantly enough to be useful for sensitivity improvements.
+
+\begin{table}\centering
+  \begin{tabular}{l|llr}
+    Hz & 22-27 & 27-29 & 29-40 \\ \hline
+    \texttt{GDS-CALIB\_STRAIN} & 1\% & 3\% & 1\%
+  \end{tabular}
+  \caption{Percent increase table (see Section~\ref{ssec:eval}) for the DARM component of the longer, quieter acoustic cluster.}\label{tab:micdarm}
+\end{table}
+
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{assets/final/L1_PEM-EX_MIC_VEA_PLUSX_DQ.png}
+  \includegraphics[width=0.5\textwidth]{assets/final/L1_GDS-CALIB_STRAIN-mic.png}
+  \caption{Representative spectra (see Section~\ref{ssec:eval}) for acoustic states mentioned in Section~\ref{ssec:mic}. ``Quiet'' refers to the background ``everything else'' cluster. The orange cluster seems to affect DARM very little.}\label{fig:mic}
+\end{figure}
+
 
 \subsection{Accelerometers}
+The ``2-hour history'' $k$-means method was used to cluster 30 days of data from various accelerometers from all VEAs in BLRMS bands shown in Table~\ref{tab:blrms}.
+This was done in two groups, one with mostly BSC accelerometers and one focusing on beamtube motion.
+The primary feature that clustered out in both runs was a 60 Hz motion at the mid stations increasing over half of a day.
+After making representative spectra (Figure~\ref{fig:acc}), it was concluded that this noise was due to the HVAC system turning on during the warmer period of the day.
+Motor load causes electrical signals to downconvert slightly as they couple into mechanical movement, so a peak at 58 Hz is characteristic of a fan.
+The fan movement did not couple into DARM.
 
-\subsection{Microphones}
+\begin{table}
+  \begin{tabular}{l|llr}
+    Hz    &       48-60 & 60-80 & 80-118 \\ \hline
+    MY VEA BTUBE & 256\% & 259\% & 123\% \\
+    EY BSC5 Z  &  108\% \\
+  \end{tabular}\hfill
+  \begin{tabular}{l|lr}
+    Hz         &      48-60 & 54-65 \\ \hline
+    MY 2100Y BTUBE &  618\%   & \\
+    \texttt{GDS-CALIB\_STRAIN}  &&     38\%
+  \end{tabular}
+  \caption{Percent increase tables (see Section~\ref{ssec:eval}) for the 58 Hz accelerometer cluster. There appears to be a correlation to DARM, but looking at the cluster spectrum (Figure~\ref{fig:acc}) reveals this to be due to random fluctuations in the 60 Hz line.}\label{tab:acc}
+\end{table}
 
-\section{Developed Code Tools: Optimizations and Considerations}
+
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{assets/final/L1_PEM-MY_ACC_BEAMTUBE_2100Y_Y_DQ.png}
+  \includegraphics[width=0.5\textwidth]{assets/final/L1_GDS-CALIB_STRAIN-acc.png}
+  \caption{Representative spectra (see Section~\ref{ssec:eval}) for the accelerometer noise state due to the fans at the mid-stations turning on. This manifests itself as a peak at 58 Hz. There is no coupling to DARM.}\label{fig:acc}
+\end{figure}
+
+
+\section{Developed Code Tools}
 Many times, scientists are inclined to launch REPLs and quickly do their simple calculations imperatively.
 But time and RAM are not infinite, and with a high-output experiment like LIGO the usual kinds of scripts and operations do not suffice.
 Given that much of the summer was spent figuring out how to write robust code that can handle large-scale data, rather than actually doing science, it is worth mentioning the way this was accomplished.
@@ -196,7 +313,8 @@ The clustering script itself was fairly straightforward, using the high abstract
 However, some thought was put into extracting meaning from the clusters.
 
 A script was created to make power spectra for the clustered data representative of each cluster.
-This is done by taking the median of the power spectra for many time intervals clustered together.
+This is done by taking the median of the 1-minute power spectra for minutes clustered together.
+An example of this is shown in Figure~\ref{fig:reps}.
 \begin{figure}[h]
   \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
   \tikzstyle{section} =[rectangle, draw, inner sep=1.125em, rounded corners, ->]
@@ -221,11 +339,12 @@ Taking the spectra of the clusters provides a signature for each cluster that ca
 The script can extract other attributes that are helpful for chasing down the source and eliminating it, like the periodicity or dominating channels.
 \begin{figure}
   \includegraphics[width=\textwidth]{assets/report2/0-L1:ISI-GND_STS_Z_DQ.png}
-  \caption{The representative spectrum of a cluster corresponding to train-dominated times. Notice that between 1 and 10 Hz, the seismic motion at ETMY (orange) is greater than at the other VEAs by a factor of about 10.}
+  \caption{The representative spectrum of a cluster corresponding to train-dominated times. Notice that between 1 and 10 Hz, the seismic motion at ETMY (orange) is greater than at the other VEAs by a factor of about 10.}\label{fig:reps}
 \end{figure}
 
 In addition, the script can produce a table that shows which frequency bands are significant in each channel during clustered times.
-``Significance'' is established by determining if the average BLRMS value at clustered times is not close to the BLRMS value of ``unclustered'' times, or times in the base cluster representing ``everything else''.
+This is done by taking the median percent increase in value of the minute-trend BLRMS of the each channel in each band.
+Tables~\ref{tab:mic},~\ref{tab:micdarm}, and~\ref{tab:acc} were all made by this script.
 
 
 \appendix

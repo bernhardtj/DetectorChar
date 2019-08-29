@@ -53,12 +53,12 @@ A long short-term memory (LSTM) recurrent neural network (RNN) seemed to work mu
 Thus, it is imperative that a more robust frequency clustering mechanism be designed for the PEM system.
 
 \section{Objectives}
-\begin{itemize}
+\begin{enumerate}
 \item
   Find an algorithm or clustering approach which correctly identifies known noise events.
 \item
-  Create a clustering approach to discover previously unknown noise correlations and/or sources.
-\end{itemize}
+  Use the results of (1) to create a clustering approach to discover previously unknown noise correlations and/or sources.
+\end{enumerate}
 
 \section{Approach}
 
@@ -100,16 +100,18 @@ Instead of just finding times when the channels are similar in value, the histor
     \draw [->] (input) -- (compute);
     \draw [->] (compute) -- (save);
   \end{tikzpicture}
-  \caption{Clustering script flowchart.}
+  \caption{Clustering script flowchart. The clustering algorithm creates a time series of cluster numbers, a label for each minute of clustered time.}
 \end{figure}
 
 \subsection{Sanity Checking with Seismometers}
 For a total clustering duration of 30 days, using the seismometers attached to ETMY, ETMX, and ITMY, in minute-trend half-order-of-magnitude BLRMS bands from 30 mHz to 30 Hz, the following known noise events were easily identified using a ``2-hour history'' $k$-means method:
 \begin{itemize}
 \item earthquakes ($0.01\to0.1$ Hz)
-\item microseisms ($0.1\to1$ Hz)
+\item microseism ($0.1\to1$ Hz)
 \item anthropogenic noise ($1\to10$ Hz)
 \end{itemize}
+
+A microseism is a faint seismic tremor caused by natural processes, such as waves of pressure in the ocean, which happens over the course of hours. All human activity creates so-called ``anthropogenic noise'', and cars, trains, logging, and even footsteps can couple to DARM. The noise floor at anthropogenic-noise-dominated frequencies noticeably rises during the day and lowers during the night. Loud human-originated events, such as trains passing, stand out over even the daytime noise floor.
 
 Some differentiation between subcategories of events in the same frequency band but of different timescales (e.g. earthquakes vs. wind; train vs. noise from cars) was lacking.
 
@@ -257,10 +259,8 @@ The fan movement did not couple into DARM.
 
 
 \section{Developed Code Tools}
-Many times, scientists are inclined to launch REPLs and quickly do their simple calculations imperatively.
+Many times, scientists are inclined to quickly do their simple calculations imperatively.
 But time and RAM are not infinite, and with a high-output experiment like LIGO the usual kinds of scripts and operations do not suffice.
-Given that much of the summer was spent figuring out how to write robust code that can handle large-scale data, rather than actually doing science, it is worth mentioning the way this was accomplished.
-
 \subsection{Streaming}
 One data-wrangling strategy is by programming with a ``streaming'' rather than ``batch'' mentality.
 Many of the gravitational wave search pipelines have the ability to keep up with new LIGO data as it is collected, doing their batch-style work in short chunks, or strides, as the data comes along.
@@ -335,8 +335,8 @@ An example of this is shown in Figure~\ref{fig:reps}.
   \caption{Roughly the states of the ``representative spectra'' script. The most complicated overlooked detail in this figure is the caching of downloads. The stream writing functions used in the BLRMS-generation script have been moved and are now included from a more general location.}
 \end{figure}
 
-Taking the spectra of the clusters provides a signature for each cluster that can be programmatically validated, allowing new states to be detected without re-clustering, and also a way to easily identify frequency conversion that is happening during coupling.
-The script can extract other attributes that are helpful for chasing down the source and eliminating it, like the periodicity or dominating channels.
+Taking the spectra of the clusters allows new states to be categorized without re-clustering, and a way to easily identify frequency conversion that is happening during coupling.
+
 \begin{figure}
   \includegraphics[width=\textwidth]{assets/report2/0-L1:ISI-GND_STS_Z_DQ.png}
   \caption{The representative spectrum of a cluster corresponding to train-dominated times. Notice that between 1 and 10 Hz, the seismic motion at ETMY (orange) is greater than at the other VEAs by a factor of about 10.}\label{fig:reps}
@@ -344,7 +344,7 @@ The script can extract other attributes that are helpful for chasing down the so
 
 In addition, the script can produce a table that shows which frequency bands are significant in each channel during clustered times.
 This is done by taking the median percent increase in value of the minute-trend BLRMS of the each channel in each band.
-Tables~\ref{tab:mic},~\ref{tab:micdarm}, and~\ref{tab:acc} were all made by this script.
+The values in Tables~\ref{tab:mic},~\ref{tab:micdarm}, and~\ref{tab:acc} were all produced by this script, but handpicked from the rest of the output for clarity.
 
 
 \appendix

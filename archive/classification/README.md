@@ -65,6 +65,11 @@ C1:PEM-RMS_BS_Z_3_10
 (basically, X and Y direction readings across all the frequency bands)
 The Python script to access and compile data into this format can be found as 'getData.py'. 
 
+### Data preconditioning - normalization
+different features has different scales; features whose raw values are large in magnitude will dominate the others. 
+A standard normalization procedure is to replace raw values with their standard score (i.e.,the number of standard deviations away from the training mean that the raw value falls),so each feature has zero mean and unit standard deviation. 
+https://dcc.ligo.org/DocDB/0163/P1900303/001/LIGO_glitch_ML_DCC.pdf
+
 
 
 ### K-Means Clustering

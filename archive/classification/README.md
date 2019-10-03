@@ -75,6 +75,18 @@ The classification needs to be modified by finding the optimal number of cluster
 ### Optimizing Number of Clusters in K-Means
 Plot the mean distance to a centroid as a function of k - the number of clusters - and use the "elbow point" to estimate the optimal number of clusters, as shown in https://www.datascience.com/blog/introduction-to-k-means-clustering-algorithm-learn-data-science-tutorials
 
+
+### Initialization and high dimensionality problem
+initialize k-means clustering using [k-means++](https://en.wikipedia.org/wiki/K-means%2B%2B). Is it useful to use [spherical k-means](https://www.researchgate.net/publication/283428234_Spherical_k-Means_Clustering) instead of k-means?
+
+
+### Is it k-means clustering really what we want?
+https://towardsdatascience.com/dont-make-this-mistake-when-clustering-time-series-data-d9403f39bbb2
+https://stats.stackexchange.com/questions/131281/dynamic-time-warping-clustering
+
+What about [DTW](https://en.wikipedia.org/wiki/Dynamic_time_warping)? It scales with the square of the timeseries length but can be improved with [LB Keogh Lower Bound](http://alexminnaar.com/2014/04/16/Time-Series-Classification-and-Clustering-with-Python.html)
+
+
 ### Evaluation
 
 

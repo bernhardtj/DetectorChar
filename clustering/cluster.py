@@ -21,6 +21,8 @@ from gwpy.segments import DataQualityFlag
 
 from util import get_logger, Progress, get_path
 
+import h5py
+
 DEFAULT_FILENAME = 'cache.hdf5'
 
 # FIXME A list of colors defines the maximum amount of clusters. Sample from a colormap instead.
@@ -79,6 +81,14 @@ def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=D
     kmeans = KMeans(**kwargs).fit(input_data)
     logger.info(f'Completed KMeans({kwargs}) fit.')
 
+    # write clusters centers to file
+    kcenters = kmeans.cluster_centers_    
+    clusters = 'cluster_center.txt'
+    if exists(clusters):
+        remove(clusters)
+    np.savetxt(clusters, kcenters)
+    logger.info(f'Wrote clusters center to {clusters}')
+    
     # cast the output labels to a TimeSeries so that cropping is easy later on.
     labels = TimeSeries(kmeans.labels_,
                         times=dl[channels[0]].crop(start=to_gps(start), end=to_gps(stop)).times,

@@ -195,7 +195,8 @@ class MinuteTrend(PostProcessor):
         out = TimeSeriesDict()
         times = unique([60 * (t.value // 60) for t in raw.times])
         raw.name = raw.name + '.mean'
-        out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times)
+        # out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times)
+        out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times[:-1])
         out[raw.name].__metadata_finalize__(raw)
         return out
 

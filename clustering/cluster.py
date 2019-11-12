@@ -15,7 +15,7 @@ from gwpy.plot import Plot
 from gwpy.time import to_gps
 from gwpy.timeseries import TimeSeriesDict, TimeSeries
 from matplotlib.pyplot import setp
-from numpy import stack, concatenate
+from numpy import stack, concatenate, savetxt
 from sklearn.cluster import KMeans
 from gwpy.segments import DataQualityFlag
 
@@ -86,7 +86,7 @@ def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=D
     clusters = 'cluster_center.txt'
     if exists(clusters):
         remove(clusters)
-    np.savetxt(clusters, kcenters)
+    savetxt(clusters, kcenters)
     logger.info(f'Wrote clusters center to {clusters}')
     
     # cast the output labels to a TimeSeries so that cropping is easy later on.

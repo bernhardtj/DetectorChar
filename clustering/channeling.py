@@ -195,8 +195,27 @@ class MinuteTrend(PostProcessor):
         out = TimeSeriesDict()
         times = unique([60 * (t.value // 60) for t in raw.times])
         raw.name = raw.name + '.mean'
-        # out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times)
         out[raw.name] = TimeSeries([raw.crop(t - 60, t).mean().value for t in times[1:]], times=times[:-1])
+        out[raw.name].__metadata_finalize__(raw)
+        return out
+
+
+@dataclass
+class NormMinuteTrend(PostProcessor):
+    """Makes minute-trend data normalized by their standard score."""
+    # NOTE: it just works if you use a single stride. 
+
+    @property
+    def output_channels(self) -> List[str]:
+        return [self.channel + '.mean_norm']
+
+    def compute(self, raw: TimeSeries) -> TimeSeriesDict:
+        out = TimeSeriesDict()
+        times = unique([60 * (t.value // 60) for t in raw.times])
+        raw.name = raw.name + '.mean_norm'
+        mean = raw.mean().value
+        std = raw.std().value
+        out[raw.name] = TimeSeries([(raw.crop(t - 60, t).mean().value - mean) / std for t in times[1:]], times=times[:-1])
         out[raw.name].__metadata_finalize__(raw)
         return out
 

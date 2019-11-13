@@ -15,6 +15,7 @@ from gwpy.plot import Plot
 from gwpy.time import to_gps
 from gwpy.timeseries import TimeSeriesDict, TimeSeries
 from matplotlib.pyplot import setp
+from scipy.stats import zscore
 from numpy import stack, concatenate, savetxt
 from sklearn.cluster import KMeans
 from gwpy.segments import DataQualityFlag
@@ -61,13 +62,17 @@ def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=D
     dl = downloader(channels, start=to_gps(start - history), end=to_gps(stop))
     logger.info(f'Downloaded from {start} to {stop} with history={history}.')
 
+    # normalization: compute data stardard score.
+    dl_score = TimeSeriesDict()
+    dl_score[channel] = [zscore(dl[channel]) for channel in channels]    
+
     # generate input matrix of the form [sample1;...;sampleN] with sampleK = [feature1,...,featureN]
     # for sklearn.cluster algorithms. This is the slow part of the function, so a progress bar is shown.
     logger.debug(f'Initiating input matrix generation...')
     with Progress('building input', (duration * 60)) as progress:
         input_data = stack(
             [concatenate(
-                [progress(dl[channel].crop, t,
+                [progress(dl_score[channel].crop, t,
                           start=to_gps(start + timedelta(seconds=t) - history),
                           end=to_gps(start + timedelta(seconds=t))).value for channel in channels]
             ) for t in range(0, int(duration * 60), 60)])

@@ -61,6 +61,13 @@ def compute_kmeans(channels, start, stop, history=timedelta(hours=2), filename=D
     logger.debug(f'Initiating download from {start} to {stop} with history={history}...')
     dl = downloader(channels, start=to_gps(start - history), end=to_gps(stop))
     logger.info(f'Downloaded from {start} to {stop} with history={history}.')
+    
+    # takes only times in lock segments
+    flag = "L1:DMT-ANALYSIS_READY:1"
+    ## NOTE: this has to be fixed:
+    segs = DataQualityFlag.query_dqsegdb(flag, dl.times[0].value, dl.times[-1].value)
+    lock_seg = [lock for lock in segs.active]
+    dl = observeOnly(dl, lock_seg)
 
     # normalization: compute data stardard score.
     dl_score = TimeSeriesDict()
@@ -192,3 +199,23 @@ def cluster_plotter(channels, start, stop,
             progress(plt.save, p, get_path(title, 'png', prefix=prefix))
 
     logger.info(f'Completed plotting for {start} to {stop} from {filename}')
+
+
+def observeOnly(data,segments,Times=False):
+    """
+    Add description
+    """
+    from gwpy.timeseries import TimeSeries
+    observe = []
+    times   = []
+    for start,end in segments:
+        begin = start - start%60
+        finish = end - end%60
+        idx_lo = np.where(data.times.value==begin)[0][0]
+        idx_hi = np.where(data.times.value==finish)[0][0]
+        observe.extend(data.value[idx_lo:idx_hi])
+        times.extend(data.times.value[idx_lo:idx_hi])
+    if Times:
+        return TimeSeries(obs,times=time)
+    else:
+        return np.array(observe)

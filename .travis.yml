@@ -1,20 +1,22 @@
 install:
-- sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-- sudo apt-get install latexmk
-- sudo apt-get install texlive-science
+- sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys D6BC243565B2087BC3F897C9277A7293F59E4889
+- echo "deb http://miktex.org/download/ubuntu xenial universe" | sudo tee /etc/apt/sources.list.d/miktex.list
+- sudo apt-get update
+- sudo apt-get install miktex
 - sudo apt-get install python-pygments
 - sudo apt-get install libreoffice
+- sudo miktexsetup --shared=yes finish
+- sudo initexmf --admin --set-config-value [MPM]AutoInstall=1
+- sudo mpm --admin --update-db
+- sudo mpm --admin --package-level=basic --upgrade
 script:
 - cd doc
-- bash -c 'ls -1 *.tex | while read line; do latexmk --shell-escape -f -pdf $line; done; latexmk -c'
+- bash -c 'ls -1 *.tex | while read line; do latexmk --shell-escape -f -pdf -interaction=nonstopmode $line; done; latexmk -c'
 - bash -c 'ls -1 *.ppt | while read line; do libreoffice --headless --convert-to pdf:impress_pdf_Export --infilter="Microsoft PowerPoint 97/2000/XP" $line; done'
 deploy:
-  provider: pages
-  github_token: "$GITHUB_TOKEN"
-  skip_cleanup: true
-  keep_history: true
-  on:
-    branch: master
-env:
-  global:
-    secure: uM/N57PA9wtSAzu5mlPM/z8SLoFXWgqs+XMU0rqaCZarbb+OBTQeI62HsPgsfKmbrhkCRC7p+4rP/1So3PiMr9o4ITxju/2fkUyLv7UZM1rtQaM5K7RvEnzP7M1TYWKAgVBpLNTfky91N9dhUScuCbvhjeqIttv74VWtUWsvcBj2GA8Q6APSLo5BU7abYbjRKNGnxYOrMkCAfRRvU1kYewMR1jKqKU0vWR0VxqaKEI7RcfSh0LnnKo31mQDWZB4g/XjyMVEX4OLps9NUHHbjE1cmXLI0YaoWRWvpqctwgQyXmR/lrzHXn2Lz7xAVAFZ0njdT7S2H63L9QkCREqkVt4qqWdTeFmCJEMpE3QUocXn/D5qd0PORw9SZjesQquBnU++87e+edS9f+ltjr/lE7d+B4lkljzitMFnU2W4tNlKrO8flickUzLeV1xHfH5RY7zRnlcSkMgL5qc4JYgXVIoo58opGrWNE25YsRZmPg96lpTw8T0HYI5Q1wyDhBMv9Dah9JjYYu+eD84A9QQ1CqbwJmEQeT+TaWWmADyF+cabu2MMmop9n+sgf5TKjFzcMZC1sNAbtZJSC9cdwEtr0qu6evASe+3PPuxouTSUwTTyF0QjJ1I1t8ZQUB08WHqtxGt5aqmeIJe4Cl/ErVO06dZsK0pKL49TiQTwS9vPga7I=
+  provider: pages:git
+  edge: true
+  cleanup: false
+  keep_history: false
+  token:
+    secure: eia1MMbFLW3Ojz/TkuXc+TFZ+IMU0bvzJLnr1dsvj9qFPLpE1AZu4Hr2jtUjCLwPhaQq444FKdCCQNXmzGBgu/dtvHMimUcdNBbztHOz6vS4yVsvni6cL9FBnGrbEGR/TowqZSRvrmy0Wmjw4Ut7KMyi0JuUfBze9P+iZvJa1MTzGK3RQCiqRUtDnjXXkIwVMgKUk+JS88i5eQEJ4YNEKtT6wEyokSTRAYRTxyKmejW/3fiPrBcaANeC9qqnxHGX4bmbKQruPbhPYoa35qkdM8udLhB1gPBYVHXI/eHhicMdQvqmpazPiSvYxmXiE9wxK3pfwnHvqboN1HvaiKmOK/HdecGQo9d5M6wfxVDc0Dg/yGlmg8lNesXqjVig63TtBaZVOngBlo84J+oioXEqRp+1M5zJr+4mkyZy6PsK36AjnZKvSILnxbq9L4AA8ynFWcRhUHtkxplcEhhgxI+y2Lko3In4dwgVStAcjktl+sU9lFbxhzNt+Objb1Ymq+wSU0dv9dYLt7grPQgjn09cYl2J2OWpndnRZRlUFPnURky0SPTLaoR7q+6g85upL8H6jGZJWXFFXBM59kZhdzVJp3h2pPWfCcwb1KXoFvz/cUxc1C1CZkxlgAMspBI8WWOnTRzUT0mBn9m4vc9k+qGQtCLxrVP4+7cC/smVIiltMeI=

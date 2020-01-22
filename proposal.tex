@@ -1,0 +1,59 @@
+\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
+            citecolor=red,urlcolor=magenta]{ligodoc}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\ligodccnumber{T}{19}{00287}{}{v1}% \ligodistribution{AIC, ISC}
+
+
+\title{Data Clustering Techniques for the Correlation of Environmental Noise to Signals in LIGO Detectors}
+
+\author{Jacob Bernhardt, Anamaria Effler, Rana Adhikari}
+
+\begin{document}
+
+\input{include/motivation}
+
+\section{Project Schedule}
+% Preparing a schedule of the principal activities and events is a good way of showing the readers that you have taken a systematic approach to planning your work.
+\paragraph{Before Arrival}
+\begin{itemize}
+\item Research algorithms to use
+\item Develop glitch-resistant BLRMS-making code
+\item Continue familiarizing with \texttt{scikit-learn} by adapting old clustering code for beamtube accelerometers
+\end{itemize}
+\paragraph{Week 1-2}
+\begin{itemize}
+\item Familiarize with types of PEM data that can have labeled events
+\item Complete the algorithm testing suite
+\end{itemize}
+\paragraph{Week 3-4}
+\begin{itemize}
+\item Develop ways to plug channels into the suite
+\item Run suite on determined variety of channel combinations and regimes
+\end{itemize}
+\paragraph{Week 5-6}
+\begin{itemize}
+\item Examine results, decide next steps
+\item Research new algorithms
+\item Adapt initial codebase for application
+\end{itemize}
+\paragraph{Week 7-8}
+\begin{itemize}
+\item Try to reveal new PEM-DARM coupling mechanisms and propose/implement solutions
+\end{itemize}
+\paragraph{Week 9-10}
+\begin{itemize}
+\item Finish up final analysis and writing final report.
+\end{itemize}
+
+\input{include/bibliography.tex}
+
+\end{document}

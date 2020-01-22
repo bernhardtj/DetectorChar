@@ -1,0 +1,97 @@
+\documentclass[colorlinks=true,pdfstartview=FitV,linkcolor=blue,
+            citecolor=red,urlcolor=magenta]{ligodoc}
+
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{longtable}
+\usepackage{rotating}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{hyperref}
+\usepackage{minted}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,fit}
+\ligodccnumber{T}{19}{00287}{}{v1}% \ligodistribution{AIC, ISC}
+
+
+\title{Data Clustering Techniques for the Correlation of Environmental Noise to Signals in LIGO Detectors}
+
+\author{Jacob Bernhardt, Anamaria Effler, Rana Adhikari}
+
+\begin{document}
+
+\input{include/motivation}
+
+\section{Interim Report 2}
+
+Due to the unsupervised nature of clustering, some postprocessing of clustered data is required for the clusters to be meaningful.
+This was the primary focus of Weeks 5, 6, and 7.
+During Week 6, I took an interesting trip to CIT.
+
+\subsection{Labeling and attribute extraction}
+A third python script was created to characterize generated clusters.
+The main points of this are to find the following for each cluster:
+\begin{itemize}
+\item average length of event
+\item average periodicity
+\item channels/bands which it dominates
+\item channels/bands which dominate it
+\end{itemize}
+and make power spectra for the clustered data representative of each cluster.
+This is done by taking the median of the power spectra for many time intervals clustered together.
+\begin{figure}[h]
+  \tikzstyle{block} = [rectangle, draw, text width=6em, text centered, rounded corners, minimum height=4em]
+  \tikzstyle{section} =[rectangle, draw, inner sep=1.125em, rounded corners, ->]
+  \begin{tikzpicture}[node distance = 9em, auto]
+    \node [block] (labels) {read labels};
+    \node [block, left of=labels] (filter) {locate base cluster};
+    \node [block, left of=filter] (segments) {locate non-base cluster segments};
+    \node [block, left of=segments] (dl) {download full-rate minutes in segments};
+    \node [block, below of=segments] (psd) {take  psd for each minute in the cluster};
+    \node [block, right of=psd] (median) {plot median};
+    \node [section, label=above:for each cluster, fit=(psd) (median)] (cluster) {};
+    \draw [->] (labels) -- (filter);
+    \draw [->] (filter) -- (segments);
+    \draw [->] (segments) -- (dl);
+    \draw [->] (dl) |- (cluster);
+    \draw [->] (psd) -- (median);
+  \end{tikzpicture}
+  \caption{Roughly the states of the ``representative spectra'' script. The most complicated overlooked detail in this figure is the caching of downloads. The stream writing functions used in the BLRMS-generation script have been moved and are now included from a more general location.}
+\end{figure}
+
+Taking the spectra of the clusters provides a signature for each cluster that can be programmatically validated, allowing new states to be detected without re-clustering, and also a way to easily identify frequency conversion that is happening during coupling.
+The script can extract other attributes that are helpful for chasing down the source and eliminating it, like the periodicity or dominating channels.
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{assets/report2/0-L1:ISI-GND_STS_Z_DQ.png}
+  \caption{The representative spectrum of a cluster corresponding to train-dominated times. Notice that between 1 and 10 Hz, the seismic motion at ETMY (orange) is greater than at the other VEAs by a factor of about 10.}
+\end{figure}
+
+\subsection{A technical note}
+Downloading and saving full-rate data takes an exorbitant amount of disk space, especially when only a portion of the frequency content is going to be used.
+This calls for a decimation procedure to be applied to raw downloads before they are saved.
+
+At CIT, Rana mentioned that the default low-pass filtering options in scipy's resampling function produce significant aliasing noise ($>1$\%) when downsampling by a large factor.
+According to a test\footnote{see \url{https://git.ligo.org/NoiseCancellation/GWcleaning/issues/2}} done by Eric Quintero, this issue can be remedied without sacrificing runtime by using (1) a number of FIR taps proportional to the downsampling factor, rather than the default fixed value, and (2) a non-default window (\texttt{blackmanharris}).
+
+For a full-rate time series \texttt{raw: gwpy.timeseries.TimeSeries}, the fastest and best procedure for resampling to \texttt{rate: int [Hz]} would be something like
+\begin{minted}[style=colorful]{python}
+raw.resample(n=20*raw.sample_rate.value/rate, window='blackmanharris')
+\end{minted}
+
+\subsection{BLRMS generation and future clustering}
+Anamaria has identified some interesting bands for the microphones and accelerometers.
+The BLRMS-generation script has been chugging away in a multi-threaded mode on the LDAS grid with these parameters for approximately a week.
+
+Next, these BLRMS channels will be clustered with \texttt{GDS-CALIB-STRAIN} as well as the SenseMon BNS range and the absolute value of temperature sensors in each VEA. 
+
+\subsection{Other algorithm testing}
+I mentioned in the first interim report an incomplete test to compare the efficacy of different clustering algorithms implemented by \texttt{sklearn}.
+This completed, and from a first glance, the Spectral Clustering and Gaussian Mixture algorithms seemed to generalize better than $k$-means over different feature timescales.
+However, algorithm upgrades will be helpful only after the full analysis using $k$-means is completed, so the topic has not been revisited.
+
+\input{include/bibliography.tex}
+
+\end{document}
